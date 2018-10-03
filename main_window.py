@@ -23,15 +23,18 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         view = GISView(GISExtent(GISVertex(0,0),GISVertex(100,100)),self.frameGeometry())
 
         self.pushButton.clicked.connect(self.update_byhand)
-        self.pushButton_2.clicked.connect(self.button2_click)
         self.pushButton_3.clicked.connect(self.change_map)
         self.pushButton_4.clicked.connect(self.change_map)
         self.pushButton_5.clicked.connect(self.change_map)
         self.pushButton_6.clicked.connect(self.change_map)
         self.pushButton_7.clicked.connect(self.change_map)
         self.pushButton_8.clicked.connect(self.change_map)
+        self.pushButton_9.clicked.connect(self.change_map)
+        self.pushButton_10.clicked.connect(self.change_map)
         self.addpoint = False
         self.updatethemap = False
+        self.pushButton_9.setDisabled(True)
+        self.pushButton_10.setDisabled(True)
 
     def change_map(self):
         action = GISMapActions.zoomin
@@ -42,21 +45,23 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         elif sender == self.pushButton_3:action = GISMapActions.movedown
         elif sender == self.pushButton_8:action = GISMapActions.moveleft
         elif sender == self.pushButton_6:action = GISMapActions.moveright
+        elif sender == self.pushButton_9:action = GISMapActions.preone
+        elif sender == self.pushButton_10:action = GISMapActions.nextone
         view.ChangeView(action)
         self.UpdateMap()
+        if view.GISExtent_currentmapextent.now_pointer > 0:
+            self.pushButton_9.setDisabled(False)
+        else:
+            self.pushButton_9.setDisabled(True)
+        if view.GISExtent_currentmapextent.now_pointer < len(view.GISExtent_currentmapextent.action_record)-1:
+            self.pushButton_10.setDisabled(False)
+        else:
+            self.pushButton_10.setDisabled(True)
     
     def update_byhand(self):
         
         self.addpoint = True
         self.update()
-
-    def button2_click(self):
-        minx = int(self.lineEdit_7.text())
-        miny = int(self.lineEdit_4.text())
-        maxx = int(self.lineEdit_5.text())
-        maxy = int(self.lineEdit_6.text())
-        view.Update(GISExtent(GISVertex(minx,miny),GISVertex(maxx,maxy)),self.frameGeometry())
-        self.UpdateMap()
 
     def UpdateMap(self):
         self.updatethemap = True

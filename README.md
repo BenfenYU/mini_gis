@@ -1,1 +1,1 @@
-# mini_gis
+# A mini gis software
