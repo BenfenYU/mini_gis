@@ -1,12 +1,11 @@
-# coding : utf-8
+# -*- coding: utf-8 -*-
 
-from Lesson2_Widget import *
-from PyQt5.QtWidgets import QApplication
-import sys
-
+from PyQt5 import QtWidgets
+from main_window import *
 
 if __name__ == '__main__':
-    
-    app = QApplication(sys.argv)
-    ex = Lesson2_Widget()
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    Lesson = Lesson()
+    Lesson.show()
     sys.exit(app.exec_())

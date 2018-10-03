@@ -3,11 +3,11 @@ import math
 from PyQt5.QtCore import Qt,QRect,QPoint
 from abc import ABCMeta, abstractmethod
 from PyQt5.QtGui import QPainter, QPen
-from Enum import enum
+from enum import Enum
 
 # ----------------------------------------------------------
 
-class GISMapActions(enum):
+class GISMapActions(Enum):
     zoomin = 1
     zoomout = 2
     moveup = 3
@@ -74,6 +74,7 @@ class GISSpatial(metaclass = ABCMeta):
 class GISExtent:
     
     ZoomingFactor = 2
+    MovingFactor = 0.25
 
     def __init__(self,GISVertex_bottomleft,GISVertex_upright):
         self.GISVertex_bottomleft = GISVertex_bottomleft
@@ -102,9 +103,48 @@ class GISExtent:
         newminy = self.GISVertex_bottomleft.y
         newmaxx = self.GISVertex_upright.x
         newmaxy = self.GISVertex_upright.y
-
+        switch = {
+            GISMapActions.zoomin:self.zoomin(),
+            GISMapActions.zoomout:self.zoomout(),
+            GISMapActions.moveup:self.moveup(),
+            GISMapActions.movedown:self.movedown(),
+            GISMapActions.moveleft:self.moveleft(),
+            GISMapActions.moveright:self.moveright(),
+        }
+        switch[GISMapActions_action]
+        self.GISVertex_upright.x = newmaxx
+        self.GISVertex_upright.y = newmaxy
+        self.GISVertex_bottomleft.x = newminx
+        self.GISVertex_bottomleft.y = newminy
         
+    
+    def zoomin(self):
+        newminx = ((self.getMinX()+self.getMaxX())-self.getWidth()/GISExtent.ZoomingFactor) /2
+        newminy = ((self.getMinY()+self.getMaxY())-self.getHeight()/GISExtent.ZoomingFactor) /2
+        newmaxx = ((self.getMinX()+self.getMaxX())+self.getWidth()/GISExtent.ZoomingFactor) /2
+        newmaxy = ((self.getMinY()+self.getMaxY())+self.getHeight()/GISExtent.ZoomingFactor) /2      
 
+    def zoomout(self):
+        newminx = ((self.getMinX()+self.getMaxX())-self.getWidth()*GISExtent.ZoomingFactor) /2
+        newminy = ((self.getMinY()+self.getMaxY())-self.getHeight()*GISExtent.ZoomingFactor) /2
+        newmaxx = ((self.getMinX()+self.getMaxX())+self.getWidth()*GISExtent.ZoomingFactor) /2
+        newmaxy = ((self.getMinY()+self.getMaxY())+self.getHeight()*GISExtent.ZoomingFactor) /2
+
+    def moveup(self):
+        newminy = self.getMinY()-self.getHeight()* GISExtent.MovingFactor
+        newmaxy = self.getMaxY()-self.getHeight()* GISExtent.MovingFactor
+
+    def movedown(self):
+        newminy = self.getMinY() + self.getHeight() * GISExtent.MovingFactor
+        newmaxy = self.getMaxY()+self.getHeight() * GISExtent.MovingFactor
+
+    def moveleft(self):
+        newminx = self.getMinX() + self.getWidth() * GISExtent.MovingFactor
+        newmaxx = self.getMaxX()+self.getWidth() * GISExtent.MovingFactor
+
+    def moveright(self):
+        newminx = self.getMinX() - self.getWidth() * GISExtent.MovingFactor
+        newmaxx = self.getMaxX()-self.getWidth() * GISExtent.MovingFactor
 # ----------------------------------------------------------
 class GISVertex:
     def __init__(self,x,y):
@@ -175,26 +215,30 @@ class GISView:
     def __init__(self,GISExtent_extent,Qrect_rectangle):
         self.Update(GISExtent_extent,Qrect_rectangle)
     
-    def Update(self,GISExtent_extent,Qrect_rectangle):
-        self._GISExtent_currentmapextent = GISExtent_extent
-        self._MapWindowSize = Qrect_rectangle
-        self._MapMinX = self._GISExtent_currentmapextent.getMinX()
-        self._MapMinY = self._GISExtent_currentmapextent.getMinY()
-        # width和height属性待补充
-        self._WinW = Qrect_rectangle.width()
-        self._WinH = Qrect_rectangle.height()
-        self._MapW = self._GISExtent_currentmapextent.getWidth()
-        self._MapH = self._GISExtent_currentmapextent.getHeight()
-        self._ScaleX = self._MapW/self._WinW
-        self._ScaleY = self._MapH/self._WinH
+    def Update(self,GISExtent_extent,Qrectrectangle):
+        self.GISExtent_currentmapextent = GISExtent_extent
+        self.MapWindowSize = Qrectrectangle
+        self.MapMinX = self.GISExtent_currentmapextent.getMinX()
+        self.MapMinY = self.GISExtent_currentmapextent.getMinY()
+        # widh和height属性待补充
+        self.WinW = Qrectrectangle.width()
+        self.WinH = Qrectrectangle.height()
+        self.MapW = self.GISExtent_currentmapextent.getWidth()
+        self.MapH = self.GISExtent_currentmapextent.getHeight()
+        self.ScaleX = self.MapW/self.WinW
+        self.ScaleY = self.MapH/self.WinH
 
     def ToScreenPoint(self,GISVertex_onevertex):
-        ScreenX = (GISVertex_onevertex.x-self._MapMinX)/self._ScaleX
-        ScreenY = self._WinH-(GISVertex_onevertex.y-self._MapMinY)/self._ScaleY
+        ScreenX = (GISVertex_onevertex.x-self.MapMinX)/self.ScaleX
+        ScreenY = self.WinH-(GISVertex_onevertex.y-self.MapMinY)/self.ScaleY
         point = QPoint(int(ScreenX),int(ScreenY))
         return point
 
     def ToMapVertex(self,Point_point):
-        MapX = self._ScaleX * Point_point.x()+self._MapMinX
-        MapY = self._ScaleY * (self._WinH-Point_point.y())+self._MapMinY
+        MapX = self.ScaleX * Point_point.x()+self.MapMinX
+        MapY = self.ScaleY * (self.WinH-Point_point.y())+self.MapMinY
         return GISVertex(MapX,MapY)
+
+    def ChangeView(self,GISMapActions_action):
+        self.GISExtent_currentmapextent.ChangeExtent(GISMapActions_action)
+        self.Update(self.GISExtent_currentmapextent,self.MapWindowSize)
