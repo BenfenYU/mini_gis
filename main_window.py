@@ -32,6 +32,18 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         self.pushButton_8.clicked.connect(self.change_map)
         self.addpoint = False
         self.updatethemap = False
+
+    def change_map(self):
+        action = GISMapActions.zoomin
+        sender = self.sender()
+        if sender == self.pushButton_4:action = GISMapActions.zoomin
+        elif sender == self.pushButton_7:action = GISMapActions.zoomout
+        elif sender == self.pushButton_5:action = GISMapActions.moveup
+        elif sender == self.pushButton_3:action = GISMapActions.movedown
+        elif sender == self.pushButton_8:action = GISMapActions.moveleft
+        elif sender == self.pushButton_6:action = GISMapActions.moveright
+        view.ChangeView(action)
+        self.UpdateMap()
     
     def update_byhand(self):
         
@@ -39,10 +51,10 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         self.update()
 
     def button2_click(self):
-        minx = float(self.lineEdit_7.text())
-        miny = float(self.lineEdit_4.text())
-        maxx = float(self.lineEdit_5.text())
-        maxy = float(self.lineEdit_6.text())
+        minx = int(self.lineEdit_7.text())
+        miny = int(self.lineEdit_4.text())
+        maxx = int(self.lineEdit_5.text())
+        maxy = int(self.lineEdit_6.text())
         view.Update(GISExtent(GISVertex(minx,miny),GISVertex(maxx,maxy)),self.frameGeometry())
         self.UpdateMap()
 
@@ -52,8 +64,6 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
 
     # 画图事件
     def paintEvent(self,event):
-        global features
-        global view
         # 如果事件被触发，开始画图
         if self.addpoint:
             # 画点
@@ -78,7 +88,7 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
                 qp.end()
             self.addpoint = False
 
-        elif self.updatethemap:
+        if self.updatethemap:
             qp = QPainter()
             for feature in features:
                 # 这个begin函数的参数为QWidget类的实例
@@ -114,17 +124,7 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
             #    self.mouse = True
             #    self.flag = False
     
-    def change_map(self):
-        action = GISMapActions.zoomin
-        sender = self.sender()
-        if sender == self.pushButton_4:action = GISMapActions.zoomin
-        elif sender == self.pushButton_7:action = GISMapActions.zoomout
-        elif sender == self.pushButton_5:action = GISMapActions.moveup
-        elif sender == self.pushButton_3:action = GISMapActions.movedown
-        elif sender == self.pushButton_8:action = GISMapActions.moveleft
-        elif sender == self.pushButton_6:action = GISMapActions.moveright
-        view.ChangeView(action)
-        self.UpdateMap()
+
             
 
     #def mousePressEvent(self,  event):
