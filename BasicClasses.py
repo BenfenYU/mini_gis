@@ -4,8 +4,14 @@ from PyQt5.QtCore import Qt,QRect,QPoint
 from abc import ABCMeta, abstractmethod
 from PyQt5.QtGui import QPainter, QPen
 from enum import Enum
+import shapefile
 
 # ----------------------------------------------------------
+
+class SHAPETYPE(Enum):
+    point = 1
+    line = 3
+    polygon = 5
 
 class GISMapActions(Enum):
     zoomin = 1
@@ -16,6 +22,27 @@ class GISMapActions(Enum):
     moveright = 6
     preone = 7
     nextone = 8
+
+#-----------------------------------------------------------
+
+class GISLayer:
+    def __init__(self,name,SHAPETYPE_ShapeType,GISExtent_Extent):
+        self.name = name
+        self.shapeType = SHAPETYPE_ShapeType
+        self.GISExtent_Extent = GISExtent_Extent
+        self.bool_DrawAttributeOrNot = False
+        self.labelIndex = 0
+        self.__GISFeature_Features = []
+    
+    def draw(self,qwidget_obj,qp,GISView_view):
+        for i in range(len(self.__GISFeature_Features)):
+            self.__GISFeature_Features[i].draw(qwidget_obj,qp,GISView_view,self.bool_DrawAttributeOrNot,self.labelIndex)
+    
+    def AddFeature(self,GISFeature_feature):
+        self.__GISFeature_Features.append(GISFeature_feature)
+    
+    def FeatureCount(self):
+        return len(self.__GISFeature_Features)
 
 
 # ---------------------------------------------------------
@@ -191,6 +218,10 @@ class GISExtent:
                 del GISExtent.action_record[i]
         GISExtent.action_record.append((self.newminx,self.newminy,self.newmaxx,self.newmaxy))
         GISExtent.now_pointer += 1
+
+    def copyFrom(self,GISExtent_extent):
+        self.GISVertex_upright.copyFrom(GISExtent_extent.GISVertex_upright)
+        self.GISVertex_bottomleft.copyFrom(GISExtent_extent.GISVertex_bottomleft)
  
 
 # ----------------------------------------------------------
@@ -203,6 +234,10 @@ class GISVertex:
         # 返回距离
         distance = math.sqrt((self.x-GISVertex_anothervertex.x)*(self.x - GISVertex_anothervertex.x)+pow((self.y-GISVertex_anothervertex.y),2));
         return distance;
+
+    def copyFrom(self,GISVertex_v):
+        self.x = GISVertex_v.x
+        self.y = GISVertex_v.y
 
 # ------------------------------------------------------
 
@@ -290,7 +325,13 @@ class GISView:
         return GISVertex(MapX,MapY)
 
     def ChangeView(self,GISMapActions_action):
+        # 改变范围
         self.GISExtent_currentmapextent.ChangeExtent(GISMapActions_action)
+        # 更新view的各比例
+        self.Update(self.GISExtent_currentmapextent,self.MapWindowSize)
+
+    def UpdateExtent(self,GISExtent_extent):
+        self.GISExtent_currentmapextent.copyFrom(GISExtent_extent)
         self.Update(self.GISExtent_currentmapextent,self.MapWindowSize)
 
     # 这是个错误示范，self.GISExtent是引用变量，指向地址，不直接存储值大小，多个变量指向同一地址，修改一次，所有变量指向的值都会发生变化
@@ -300,3 +341,36 @@ class GISView:
     #    print(self.GISExtent_currentmapextent.GISVertex_upright.x)
     #    print(GISView.now_pointer)
     #    self.Update(self.GISExtent_currentmapextent,self.MapWindowSize)
+
+# ---------------------------------------------------------------
+
+class GISShapefile:
+    def readPoint(self,shp):
+        myshp = open(shp, "rb")
+        sf = shapefile.Reader(shp=myshp)
+        # 图层
+        shapes = sf.shapes()
+        type = shapes[0].shapeType
+        X = []
+        Y = []
+        tempLayer = []
+        # 这里细化到组成每个空间对象的点
+        for shape in shapes:
+            for point in shape.points:
+                X.append(point[0])
+                Y.append(point[1])
+                onePoint = GISPoint(GISVertex(point[0],point[1]))
+                onefeature = GISFeature(onePoint,GISAttribute())
+                tempLayer.append(onefeature)
+        # 根据全部点的位置，找到最大和最小，构成extent
+        xMin = min(X)
+        yMin = min(Y)
+        xMax = max(X)
+        yMax = max(Y)
+        GISExtent_extent = GISExtent(GISVertex(xMin,yMin),GISVertex(xMax,yMax))
+        GISLayer_layer = GISLayer(shp,type,GISExtent_extent)
+        for feature in tempLayer:
+            GISLayer_layer.AddFeature(feature)
+        # 要返回一个layer类的对象
+        return GISLayer_layer
+        

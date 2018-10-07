@@ -1,0 +1,13 @@
+[[source]]
+url = "http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+"pyqt5" = "*"
+pyshp = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"
