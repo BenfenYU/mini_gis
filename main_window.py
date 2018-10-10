@@ -78,8 +78,7 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
 # ----------------------------------------------用最新的view画图----------------------------------------------------------------------
 
     # 统一的更新地图函数
-    def UpdateMap(self):
-        global view
+    def UpdateMap(self):        
         self.pop_needlessand_add()
         # 作为触发事件的一个触发器
         self.updatethemap = True
@@ -131,24 +130,25 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
     
     # 指针永远指向当前地图显示的范围，不论是否为最新的
     def pop_needlessand_add(self):
-        global nowPointer,view
+        global nowPointer,view,viewList
         if nowPointer <len(viewList)-1:
             for i in reversed(range(nowPointer + 1,len(viewList))):
                 del viewList[i]
+                print(i)
         viewCopy = copy.deepcopy(view)
         viewList.append(viewCopy)
         nowPointer += 1
             
     def undo(self):
         global nowPointer,view
-        view = viewList[nowPointer-1]
+        view = copy.deepcopy(viewList[nowPointer-1])
         nowPointer -=1
         self.updatethemap = True
         self.update()
 
     def redo(self):
         global nowPointer,view
-        view = viewList[nowPointer+1]
+        view = copy.deepcopy(viewList[nowPointer+1])
         nowPointer +=1
         self.updatethemap = True
         self.update()
