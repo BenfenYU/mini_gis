@@ -173,35 +173,28 @@ class GISExtent:
         self.newminy = ((self.getMinY()+self.getMaxY())-self.getHeight()/self.ZoomingFactor) /2
         self.newmaxx = ((self.getMinX()+self.getMaxX())+self.getWidth()/self.ZoomingFactor) /2
         self.newmaxy = ((self.getMinY()+self.getMaxY())+self.getHeight()/self.ZoomingFactor) /2    
-        self.pop_needlessand_add()
-        
 
     def zoomout(self):
         self.newminx = ((self.getMinX()+self.getMaxX())-self.getWidth()*self.ZoomingFactor) /2
         self.newminy = ((self.getMinY()+self.getMaxY())-self.getHeight()*self.ZoomingFactor) /2
         self.newmaxx = ((self.getMinX()+self.getMaxX())+self.getWidth()*self.ZoomingFactor) /2
         self.newmaxy = ((self.getMinY()+self.getMaxY())+self.getHeight()*self.ZoomingFactor) /2
-        self.pop_needlessand_add() 
 
     def moveup(self):
         self.newminy = self.getMinY()-self.getHeight()* self.MovingFactor
         self.newmaxy = self.getMaxY()-self.getHeight()* self.MovingFactor
-        self.pop_needlessand_add()   
 
     def movedown(self):
         self.newminy = self.getMinY() + self.getHeight() * self.MovingFactor
         self.newmaxy = self.getMaxY()+self.getHeight() * self.MovingFactor
-        self.pop_needlessand_add()   
 
     def moveleft(self):
         self.newminx = self.getMinX() + self.getWidth() * self.MovingFactor
         self.newmaxx = self.getMaxX()+self.getWidth() * self.MovingFactor
-        self.pop_needlessand_add()   
 
     def moveright(self):
         self.newminx = self.getMinX() - self.getWidth() * self.MovingFactor
-        self.newmaxx = self.getMaxX()-self.getWidth() * self.MovingFactor
-        self.pop_needlessand_add()   
+        self.newmaxx = self.getMaxX()-self.getWidth() * self.MovingFactor 
 
     def gopre(self):
         [self.newminx,self.newminy,self.newmaxx,self.newmaxy ]= GISExtent.action_record[GISExtent.now_pointer-1]
@@ -211,13 +204,6 @@ class GISExtent:
         [self.newminx,self.newminy,self.newmaxx,self.newmaxy ]= GISExtent.action_record[GISExtent.now_pointer+1]
         GISExtent.now_pointer+=1  
     
-    # 指针永远指向当前地图显示的范围，不论是否为最新的
-    def pop_needlessand_add(self):
-        if GISExtent.now_pointer <len(GISExtent.action_record)-1:
-            for i in reversed(range(GISExtent.now_pointer + 1,len(GISExtent.action_record))):
-                del GISExtent.action_record[i]
-        GISExtent.action_record.append((self.newminx,self.newminy,self.newmaxx,self.newmaxy))
-        GISExtent.now_pointer += 1
 
     def copyFrom(self,GISExtent_extent):
         self.GISVertex_upright.copyFrom(GISExtent_extent.GISVertex_upright)
