@@ -2,7 +2,7 @@
 
 from PyQt5 import QtWidgets
 from from_ui import *
-import random
+import random,os
 import PyQt5.QtWidgets as QtWidgets
 from BasicClasses import *
 from PyQt5.QtGui import *
@@ -24,7 +24,7 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         Ui_Form.__init__(self)
         self.setupUi(self)
         global view
-        view = GISView(GISExtent(GISVertex(0,0),GISVertex(100,100)),self.frameGeometry())
+        view = GISView(GISExtent(GISVertex(0,0),GISVertex(100,100)),self.graphicsView.frameGeometry())
 
         self.pushButton.clicked.connect(self.showOverview)
         self.pushButton_3.clicked.connect(self.change_map)
@@ -40,12 +40,18 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         self.pushButton_9.setDisabled(True)
         self.pushButton_10.setDisabled(True)
 
+        self.scene = QtWidgets.QGraphicsScene()
+        self.graphicsView.setScene(self.scene)
+
     def openshp(self):
         global layer
         sf = GISShapefile()
-        layer = sf.readPoint('/home/benfen/Downloads/ne_110m_populated_places/ne_110m_populated_places.shp')
+        path = os.path.abspath('./test/ne_110m_rivers_lake_centerlines/ne_110m_rivers_lake_centerlines.shp')
+        layer = sf.readshp(path)
         layer.bool_drawAttributeOrNot = False
-        QMessageBox.information(self,'提示','读取到'+str(layer.FeatureCount())+'个点')
+        print('读图完毕，开始画图')
+        self.showOverview()
+        #QMessageBox.information(self,'提示','读取到'+str(layer.FeatureCount())+'个点'+'Re为：'+str(Re)+'。Ro为:'+str(Ro))
 
 #---------------------------------------------更改地图view----------------------------------------------------------------
 
@@ -97,10 +103,9 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
             self.pushButton_10.setDisabled(True)
 
         if self.updatethemap:
+            self.scene.clear()
             qp = QPainter()
-            qp.begin(self)
             layer.draw(self,qp,view)
-            qp.end()
             self.updatethemap = False
             # 画线
             #if self.btn_line.isChecked():

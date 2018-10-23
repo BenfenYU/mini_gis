@@ -18,64 +18,57 @@
     <rect>
      <x>0</x>
      <y>10</y>
-     <width>865</width>
+     <width>789</width>
      <height>51</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_3">
     <item>
-     <widget class="QPushButton" name="pushButton_2">
-      <property name="text">
-       <string>打开点文件</string>
-      </property>
-     </widget>
-    </item>
-    <item>
      <widget class="QPushButton" name="pushButton">
       <property name="text">
-       <string>显示全图</string>
+       <string>zoom to layer</string>
       </property>
      </widget>
     </item>
     <item>
      <widget class="QPushButton" name="pushButton_4">
       <property name="text">
-       <string>放大</string>
+       <string>magnify</string>
       </property>
      </widget>
     </item>
     <item>
      <widget class="QPushButton" name="pushButton_7">
       <property name="text">
-       <string>缩小</string>
+       <string>shrink</string>
       </property>
      </widget>
     </item>
     <item>
      <widget class="QPushButton" name="pushButton_5">
       <property name="text">
-       <string>上移</string>
+       <string>up</string>
       </property>
      </widget>
     </item>
     <item>
      <widget class="QPushButton" name="pushButton_3">
       <property name="text">
-       <string>下移</string>
+       <string>down</string>
       </property>
      </widget>
     </item>
     <item>
      <widget class="QPushButton" name="pushButton_8">
       <property name="text">
-       <string>左移</string>
+       <string>left</string>
       </property>
      </widget>
     </item>
     <item>
      <widget class="QPushButton" name="pushButton_6">
       <property name="text">
-       <string>右移</string>
+       <string>right</string>
       </property>
      </widget>
     </item>
@@ -94,6 +87,29 @@
      </widget>
     </item>
    </layout>
+  </widget>
+  <widget class="QPushButton" name="pushButton_2">
+   <property name="geometry">
+    <rect>
+     <x>800</x>
+     <y>20</y>
+     <width>94</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>open shp</string>
+   </property>
+  </widget>
+  <widget class="QGraphicsView" name="graphicsView">
+   <property name="geometry">
+    <rect>
+     <x>5</x>
+     <y>71</y>
+     <width>1331</width>
+     <height>531</height>
+    </rect>
+   </property>
   </widget>
  </widget>
  <resources/>

@@ -6,6 +6,9 @@ name = "pypi"
 [packages]
 "pyqt5" = "*"
 pyshp = "*"
+numpy = "*"
+matplotlib = "*"
+mayavi = "*"
 
 [dev-packages]
 
