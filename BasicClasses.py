@@ -2,7 +2,8 @@
 import math,shapefile,copy,os
 from PyQt5.QtCore import Qt,QRect,QPoint,QPointF,QLineF
 from abc import ABCMeta, abstractmethod
-from PyQt5.QtGui import QPainter, QPen
+from PyQt5.QtGui import QPainter, QPen,QPolygon,	QPolygonF
+from PyQt5.QtWidgets import  QGraphicsScene,QGraphicsLineItem,QGraphicsPolygonItem
 from enum import Enum
 
 # ----------------------------------------------------------
@@ -24,7 +25,7 @@ class GISMapActions(Enum):
 
 #-----------------------------------------------------------
 
-class GISLayer:
+class GISLayer: # layer类建一个字典，全类的静态属性，用来存储不同的图层。所
     def __init__(self,name,SHAPETYPE_ShapeType,GISExtent_Extent):
         self.name = name
         self.shapeType = SHAPETYPE_ShapeType
@@ -44,7 +45,6 @@ class GISLayer:
     def FeatureCount(self):
         return len(self.__GISFeature_Features)
 
-
 # ---------------------------------------------------------
 
 class GISFeature:
@@ -57,10 +57,10 @@ class GISFeature:
         if bool_DrawAttributeOrNot:
             self.GISAttribute_attribute.draw(qwidget_obj,qp,GISView_view,self.GISSpatial_spatialpart.GISVertex_centroid,index)
 
-    def drawLine(self,qwidget_obj,qp,GISView_view,bool_DrawAttributeOrNot,index):
-        self.GISSpatial_spatialpart.draw(qwidget_obj,qp,GISView_view)
-        if bool_DrawAttributeOrNot:
-            self.GISAttribute_attribute.draw(qwidget_obj,qp,GISView_view,self.GISSpatial_spatialpart.List_allvertex[0],index)
+    #def drawLine(self,qwidget_obj,qp,GISView_view,bool_DrawAttributeOrNot,index):
+    #    self.GISSpatial_spatialpart.draw(qwidget_obj,qp,GISView_view)
+    #    if bool_DrawAttributeOrNot:
+    #        self.GISAttribute_attribute.draw(qwidget_obj,qp,GISView_view,self.GISSpatial_spatialpart.List_allvertex[0],index)
     
     def getAttribute(self,index):
         return self.GISAttribute_attribute.GetValue(index)
@@ -208,9 +208,9 @@ class GISExtent:
     def copyFrom(self,GISExtent_extent):
         self.GISVertex_upright.copyFrom(GISExtent_extent.GISVertex_upright)
         self.GISVertex_bottomleft.copyFrom(GISExtent_extent.GISVertex_bottomleft)
- 
 
 # ----------------------------------------------------------
+
 class GISVertex:
     def __init__(self,x,y):
         self.x = x;
@@ -234,10 +234,10 @@ class GISPoint(GISSpatial):
     
     def draw(self,qwidget_obj,qp,GISView_view):
         Point_screenpoint = GISView_view.ToScreenPoint(self.GISVertex_centroid)
-        pen = QPen(Qt.red, 10, Qt.SolidLine)
+        pen = QPen(Qt.red, 5)
         r = QPoint(Point_screenpoint.x(), Point_screenpoint.y())
         # 用添加椭圆的方法画点
-        qwidget_obj.scene.addEllipse(Point_screenpoint.x(), Point_screenpoint.y(), 2.0, 2.0, pen)
+        qwidget_obj.scene.addEllipse(Point_screenpoint.x(), Point_screenpoint.y(), 6.0, 6.0, pen)
 
     def Distance(self,GISVertex_anothervertex):
         return self.GISVertex_centroid.Distance(GISVertex_anothervertex)
@@ -250,9 +250,9 @@ class GISLine(GISSpatial):
     def draw(self,qwidget_obj,qp,GISView_view):
         qLineFsToScreenList = GISView_view.toScreenLine(self.List_allvertex)
         for qLineF in qLineFsToScreenList:
-            pen = QPen(Qt.blue, 10, Qt.SolidLine)
-            # 用添加椭圆的方法画点
-            qwidget_obj.scene.addLine(qLineF , pen)
+            qwidget_obj.scene.addItem(QGraphicsLineItem(qLineF))
+            #pen = QPen(Qt.blue, 1, Qt.SolidLine)
+            #qwidget_obj.scene.addLine(qLineF , pen)
 
     def Distance(self,GISVertex_anothervertex):
         # 补充点到直线的距离
@@ -277,6 +277,13 @@ class GISPolygon(GISSpatial):
         self.List_allvertex = List_allvertex
     
     def draw(self,qwidget_obj,qp,GISView_view):
+        qPolygonFsToScreen = GISView_view.toScreenPolygon(self.List_allvertex)
+        qwidget_obj.scene.addItem(QGraphicsPolygonItem(QPolygonF(qPolygonFsToScreen)))
+            #pen = QPen(Qt.blue, 1, Qt.SolidLine)
+            #qwidget_obj.scene.addLine(qLineF , pen)
+        return
+
+    def Distance(self):
         return
 
 # -------------------------------------------------------------
@@ -286,6 +293,7 @@ class GISView:
 
     def __init__(self,GISExtent_extent,Qrect_rectangle):
         self.Update(GISExtent_extent,Qrect_rectangle)
+        print(Qrect_rectangle.width())
     
     def Update(self,GISExtent_extent,Qrectrectangle):
         self.GISExtent_currentmapextent = GISExtent_extent
@@ -301,26 +309,46 @@ class GISView:
         self.ScaleY = self.MapH/self.WinH
 
     def ToScreenPoint(self,GISVertex_onevertex):
-        print(GISVertex_onevertex.x)
+        #print(GISVertex_onevertex.x)
         ScreenX = (GISVertex_onevertex.x-self.MapMinX)/self.ScaleX
         ScreenY = self.WinH-(GISVertex_onevertex.y-self.MapMinY)/self.ScaleY
         point = QPoint(int(ScreenX),int(ScreenY))
         return point
     
+    def toScreenVertex(self,onevertex):
+        #print(GISVertex_onevertex.x)
+        ScreenX = (onevertex.x-self.MapMinX)/self.ScaleX
+        ScreenY = self.WinH-(onevertex.y-self.MapMinY)/self.ScaleY
+        onevertex = GISVertex(ScreenX,ScreenY)
+        return onevertex
+    
     def toScreenLine(self,listVertex):
         qLineFs = []
         listPointF = []
-        for i in range(len(listVertex)):# ?????为什么减一才行
+        for i in range(len(listVertex)):
             vertex = listVertex[i]
             qPoint = self.ToScreenPoint(vertex)
             pointF = QPointF(qPoint)
             listPointF.append(pointF)
 
-        for i in range(len(listVertex)-2):
+        for i in range(len(listVertex)-1):
             qLineF = QLineF(listPointF[i],listPointF[i+1])
             qLineFs.append(qLineF)
 
-        return qLineFs
+    def toScreenPolygon(self,listVertex):
+        listPoints = []
+        nPoints = 0
+        for i in range(len(listVertex)):
+            vertex = listVertex[i]
+            vertex = self.toScreenVertex(vertex)
+            listPoints.append(vertex.x)
+            listPoints.append(vertex.y)
+            nPoints+=1
+        
+        polygon = QPolygon()
+        polygon.setPoints( listPoints)
+
+        return polygon
 
 
     def ToMapVertex(self,Point_point):
@@ -356,71 +384,44 @@ class GISShapefile:
         # 从二进制读shp对象
         sf = shapefile.Reader(shp=myshp)
         # 图层
-        shapes = sf.shapes()
-        type = shapes[0].shapeType
-        if type == 1 or 8:
-            layer = self.readLine(shapes,type,name)
-        elif type ==3:
-            print('线')
-            layer = self.readLine(shapes,type,name)
+        # shapes = sf.shapes()
+        #layerType = shapes[0].shapeType
+        layerType = sf.shapeType
+        #print(layerType == 1 or 8)
+        if layerType == 1 or layerType == 8:
+            layer = self.readPoint(sf,layerType,name)
+        elif layerType ==3:
+            layer = self.readLine(sf,layerType,name)
             
-        elif type == 5:
-            layer = self.readPolygon(shapes,type,name)
+        elif layerType == 5:
+            layer = self.readPolygon(sf,layerType,name)
         else:
             QMessageBox.information(self,'提示','暂时不支持，请升级后再来。')
         
         return layer
 
-    def readPoint(self,shapes,type,name):
-        X = []
-        Y = []
+    def readPoint(self,sf,layerType,name):
         features = []
-        tempX = []
-        tempY = []
         # 这里细化到组成每个空间对象的点
-        for shape in shapes:
+        for shape in sf.shapes():
             for point in shape.points:
-                X.append(point[0])
-                Y.append(point[1])
                 onePoint = GISPoint(GISVertex(point[0],point[1]))
                 onefeature = GISFeature(onePoint,GISAttribute())
                 features.append(onefeature)
-        #minValue = []
-        #for i in range(len(X)):
-        #    tempX,tempY = copy.deepcopy(X),copy.deepcopy(Y)
-        #    tempX.pop(i)
-        #    tempY.pop(i)
-        #    print('计算第个'+str(i)+'点')
-        #    for n in range(len(tempX)):
-        #        out = []
-        #        out.append((pow(tempX[n]-X[i],2)+pow(tempY[n]-Y[i],2))**0.5)
-        #    minValue.append(min(out))
-        # 根据全部点的位置，找到最大和最小，构成extent
-        xMin = min(X)
-        yMin = min(Y)
-        xMax = max(X)
-        yMax = max(Y)
-        GISExtent_extent = GISExtent(GISVertex(xMin,yMin),GISVertex(xMax,yMax))
-        GISLayer_layer = GISLayer(name,type,GISExtent_extent)
+
+        layerExtent = sf.bbox
+        GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[1],layerExtent[3]))
+        GISLayer_layer = GISLayer(name,layerType,GISExtent_extent)
         for feature in features:
             GISLayer_layer.AddFeature(feature)
-        # 要返回一个layer类的对象
-        # Re,Ro = self.pointPattern(GISLayer_layer,minValue,xMin,yMin,xMax,yMax)
         return GISLayer_layer#,Re,Ro
 
-    def readLine(self,shapes,type,name):
-        Xextent = []
-        Yextent = []
+    def readLine(self,sf,layerType,name):
         vertexInOneline = []
         allLines = []
         features = []
 
-        for shape in shapes:
-            # 录入每个线对象的经度和纬度范围，方便比较
-            Xextent.append(shape.bbox[0])
-            Xextent.append(shape.bbox[2])
-            Yextent.append(shape.bbox[1])
-            Yextent.append(shape.bbox[3])
+        for shape in sf.shapes():
             for point in shape.points:
                 # 每条线上的vertex的列表
                 vertexInOneline.append(GISVertex(int(point[0]),int(point[1])))
@@ -430,12 +431,9 @@ class GISShapefile:
         for line in allLines:
             features.append(GISFeature(line,GISAttribute()))
 
-        xMin = min(Xextent)
-        yMin = min(Yextent)
-        xMax = max(Xextent)
-        yMax = max(Yextent)
-        GISExtent_extent = GISExtent(GISVertex(xMin,yMin),GISVertex(xMax,yMax))
-        GISLayer_layer = GISLayer(name,type,GISExtent_extent)
+        layerExtent = sf.bbox
+        GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
+        GISLayer_layer = GISLayer(name,layerType,GISExtent_extent)
 
         for feature in features:
             GISLayer_layer.AddFeature(feature)
@@ -443,9 +441,28 @@ class GISShapefile:
         return GISLayer_layer
 
 
+    def readPolygon(self,sf,layerType,name):
+        vertexPerPolygon = []
+        allPolygon = []
+        features = []
 
-    def readPolygon(self,shapes,type):
-        return 
+        for shape in sf.shapes():
+            for point in shape.points:
+                vertexPerPolygon.append(GISVertex(int(point[0]),int(point[1])))
+            
+            allPolygon.append(GISPolygon(vertexPerPolygon))
+
+        for polygon in allPolygon:
+            features.append(GISFeature(polygon,GISAttribute()))
+
+        layerExtent = sf.bbox
+        GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
+        GISLayer_layer = GISLayer(name,layerType,GISExtent_extent)
+
+        for feature in features:
+            GISLayer_layer.AddFeature(feature)
+
+        return GISLayer_layer
         
     def pointPattern(self,GISLayer_layer,minValue,xMin,yMin,xMax,yMax):
         extentArea = (xMax-xMin)*(yMax-yMin)

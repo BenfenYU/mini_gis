@@ -80,6 +80,7 @@ if PYTHON3:
     xrange = range
     izip = zip
 else:
+    # itertools模块返回迭代器
     from itertools import izip
 
 
@@ -1816,6 +1817,7 @@ class Writer(object):
 ##                return target
 
 # Begin Testing
+# kwargs表示你可以不限数量的传入键值对的参数
 def test(**kwargs):
     import doctest
     doctest.NORMALIZE_WHITESPACE = 1

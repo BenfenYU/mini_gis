@@ -8,4 +8,8 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     Lesson = Lesson()
     Lesson.show()
-    sys.exit(app.exec_())
+    try:
+        sys.exit(app.exec_())
+    except BaseException as e:
+        print(e)
+        pass

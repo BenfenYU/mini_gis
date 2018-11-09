@@ -10,7 +10,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_Form(object):
     def setupUi(self, Form):
-        Form.setObjectName("Form")
+        Form.setObjectName("Mini Gis")
         Form.resize(1346, 608)
         self.horizontalLayoutWidget_3 = QtWidgets.QWidget(Form)
         self.horizontalLayoutWidget_3.setGeometry(QtCore.QRect(0, 10, 789, 51))
@@ -49,7 +49,7 @@ class Ui_Form(object):
         self.pushButton_2.setGeometry(QtCore.QRect(800, 20, 94, 28))
         self.pushButton_2.setObjectName("pushButton_2")
         self.graphicsView = QtWidgets.QGraphicsView(Form)
-        self.graphicsView.setGeometry(QtCore.QRect(5, 71, 1331, 531))
+        self.graphicsView.setGeometry(QtCore.QRect(5, 71, 1300, 631))
         self.graphicsView.setObjectName("graphicsView")
 
         self.retranslateUi(Form)
@@ -57,7 +57,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
+        Form.setWindowTitle(_translate("Form", "Mini Gis"))
         self.pushButton.setText(_translate("Form", "zoom to layer"))
         self.pushButton_4.setText(_translate("Form", "magnify"))
         self.pushButton_7.setText(_translate("Form", "shrink"))

@@ -9,6 +9,7 @@ pyshp = "*"
 numpy = "*"
 matplotlib = "*"
 mayavi = "*"
+pylint = "*"
 
 [dev-packages]
 

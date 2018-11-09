@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from PyQt5 import QtWidgets
 from from_ui import *
-import random,os
-import PyQt5.QtWidgets as QtWidgets
+import random,os,copy
 from BasicClasses import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5 import *
-import copy
+from PyQt5.QtCore import Qt,QRect,QPoint,QPointF,QLineF,QRectF
 
 features = []
 view = None
@@ -23,8 +21,10 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         QtWidgets.QWidget.__init__(self)
         Ui_Form.__init__(self)
         self.setupUi(self)
+        self.frameGeometryF = QRectF(self.graphicsView.frameGeometry())
+        print(self.frameGeometryF.width())
         global view
-        view = GISView(GISExtent(GISVertex(0,0),GISVertex(100,100)),self.graphicsView.frameGeometry())
+        view = GISView(GISExtent(GISVertex(0,0),GISVertex(100,100)),self.frameGeometryF)
 
         self.pushButton.clicked.connect(self.showOverview)
         self.pushButton_3.clicked.connect(self.change_map)
@@ -36,17 +36,16 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         self.pushButton_9.clicked.connect(self.change_map)
         self.pushButton_10.clicked.connect(self.change_map)
         self.pushButton_2.clicked.connect(self.openshp)
-        self.updatethemap = False
         self.pushButton_9.setDisabled(True)
         self.pushButton_10.setDisabled(True)
 
-        self.scene = QtWidgets.QGraphicsScene()
+        self.scene = QtWidgets.QGraphicsScene(self.frameGeometryF)
         self.graphicsView.setScene(self.scene)
 
     def openshp(self):
         global layer
         sf = GISShapefile()
-        path = os.path.abspath('./test/ne_110m_rivers_lake_centerlines/ne_110m_rivers_lake_centerlines.shp')
+        path = os.path.abspath('./test/ne_110m_ocean/ne_110m_ocean.shp')
         layer = sf.readshp(path)
         layer.bool_drawAttributeOrNot = False
         print('读图完毕，开始画图')
@@ -87,11 +86,11 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
     def UpdateMap(self):        
         self.pop_needlessand_add()
         # 作为触发事件的一个触发器
-        self.updatethemap = True
-        self.update()
+        # self.updatethemap = True
+        self.paint()
 
     # 图事件
-    def paintEvent(self,event):
+    def paint(self):
 
         if nowPointer > 0:
             self.pushButton_9.setDisabled(False)
@@ -102,36 +101,10 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         else:
             self.pushButton_10.setDisabled(True)
 
-        if self.updatethemap:
-            self.scene.clear()
-            qp = QPainter()
-            layer.draw(self,qp,view)
-            self.updatethemap = False
-            # 画线
-            #if self.btn_line.isChecked():
-            #    qp = QPainter()
-            #    x1 = int('0'+(self.X_text.text()))
-            #    y1 = int('0'+(self.Y_text.text()))
-            #    x2 = int('0'+(self.X_text2.text()))
-            #    y2 = int('0'+(self.Y_text2.text()))                
-            #    a = self.A_text.text()
-            #    onevertex = GISVertex(x1,y1)
-            #    twovertex = GISVertex(x2,y2)
-            #    oneline = GISLine([onevertex,twovertex])
-            #    text = self.A_text.text()
-            #    oneattribute = GISAttribute()
-            #    oneattribute.AddValue(text)
-            #    onefeature = GISFeature(oneline,oneattribute)
-            #    features[1].append(onefeature)
-            #    for feature in features[1]:
-            #        # 这个begin函数的参数为QWidget类的实例
-            #        qp.begin(self)
-            #        # 原来self也可以当参数用，本类的实例作为参数传递
-            #        #onepoint.draw(qwidget_obj = self,qp = qp)
-            #        feature.drawLine(self, qp,True,0)
-            #        qp.end()
-            #    self.mouse = True
-            #    self.flag = False
+        self.scene.clear()
+        qp = QPainter()
+        layer.draw(self,qp,view)
+            
     
     # 指针永远指向当前地图显示的范围，不论是否为最新的
     def pop_needlessand_add(self):
@@ -158,27 +131,3 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         self.updatethemap = True
         self.update()
 
-    #def mousePressEvent(self,  event):
-    #    global features
-    #    global view
-    #    if self.mouse:
-    #        #if self.btn_point.isChecked():
-    #        x = event.x()
-    #        y = event.y()
-    #        id = -1
-    #        mouselocation = view.ToMapVertex(QPoint(x,y))
-    #        for i in range(len(features)):
-    #            # 这里计算距离，改为使用GISspatial类的抽象方法，其子类负责具体实现，最终只要返回一个distance即可
-    #            distance = features[i].GISSpatial_spatialpart.Distance(mouselocation)
-    #            mindistance = 100000
-    #            if distance < mindistance:
-    #                mindistance = distance
-    #                id = i
-    #        if id == -1:
-    #            QMessageBox.about(self,'错误',"没有任何空间对象！")  
-    #            return
-    #        nearestpoint = view.ToScreenPoint(features[id].sptialpart.centroid)
-    #        screendistance = abs(nearestpoint.X-x)+abs(nearestpoint.Y-y)
-    #        if screendistance > 5:
-    #            QMessageBox.about(self,'太远了',"请靠近空间对象点击") 
-    #        QMessageBox.about(self,'属性',"属性为： "+features[1][id].getAttribute(0)) 
