@@ -33,18 +33,28 @@ class GISLayer: # layer类建一个字典，全类的静态属性，用来存储
         self.bool_DrawAttributeOrNot = False
         self.labelIndex = 0
         self.__GISFeature_Features = []
-    
+        self._attriColumn = []
+
     def draw(self,qwidget_obj,qp,GISView_view):
         # 每个都画了
         for i in range(len(self.__GISFeature_Features)):
             self.__GISFeature_Features[i].draw(qwidget_obj,qp,GISView_view,self.bool_DrawAttributeOrNot,self.labelIndex)
-    
+
     def AddFeature(self,GISFeature_feature):
         self.__GISFeature_Features.append(GISFeature_feature)
-    
+
     def FeatureCount(self):
         return len(self.__GISFeature_Features)
 
+    def addAttriColumn(self,listAttri):
+        for attri in listAttri:
+            self._attriColumn.append(attri)
+
+    def getAttriColum(self):
+        return self._attriColumn
+    
+    def getFeature(self):
+        return self.__GISFeature_Features
 # ---------------------------------------------------------
 
 class GISFeature:
@@ -61,27 +71,27 @@ class GISFeature:
     #    self.GISSpatial_spatialpart.draw(qwidget_obj,qp,GISView_view)
     #    if bool_DrawAttributeOrNot:
     #        self.GISAttribute_attribute.draw(qwidget_obj,qp,GISView_view,self.GISSpatial_spatialpart.List_allvertex[0],index)
-    
+
     def getAttribute(self,index):
         return self.GISAttribute_attribute.GetValue(index)
 
 # ----------------------------------------------------------
 
 class GISAttribute:
-    def __init__(self):
-        self.List_values = []
+    def __init__(self,listValues = []):
+        self.List_values = listValues
 
     def AddValue(self,object_attribute):
         self.List_values.append(object_attribute)
 
     def GetValue(self,index):
         return self.List_values[index]
-    
+
     def draw(self,qwidget_obj,qp,GISView_view,GISVertex_location,index):
         Point_screenpoint = GISView_view.ToScreenPoint(GISVertex_location)
         qp.setPen(Qt.red)
         size = qwidget_obj.size()
-        qp.drawText(QRect(Point_screenpoint.x(),Point_screenpoint.y()-40,80,30),Qt.AlignCenter,self.List_values[index])        
+        qp.drawText(QRect(Point_screenpoint.x(),Point_screenpoint.y()-40,80,30),Qt.AlignCenter,self.List_values[index])
 
 # ----------------------------------------------------------
 
@@ -93,7 +103,7 @@ class GISSpatial(metaclass = ABCMeta):
     @abstractmethod
     def draw(self,qp,GISView_view):
         return
-    
+
     @abstractmethod
     def Distance(self):
         return
@@ -101,12 +111,12 @@ class GISSpatial(metaclass = ABCMeta):
 # ----------------------------------------------------------
 
 class GISExtent:
-    
+
     ZoomingFactor = 2
     MovingFactor = 0.25
-    
+
     action_record = [[0,0,100,100]]
-    now_pointer = 0 
+    now_pointer = 0
 
     def __init__(self,GISVertex_bottomleft,GISVertex_upright):
         self.GISVertex_bottomleft = GISVertex_bottomleft
@@ -127,14 +137,14 @@ class GISExtent:
 
     def getMaxY(self):
         return self.GISVertex_upright.y
-    
+
     def getWidth(self):
         return self.GISVertex_upright.x-self.GISVertex_bottomleft.x
 
     def getHeight(self):
         return self.GISVertex_upright.y-self.GISVertex_bottomleft.y
 
-    def ChangeExtent(self,GISMapActions_action):       
+    def ChangeExtent(self,GISMapActions_action):
         if GISMapActions_action == GISMapActions.zoomin:
             self.zoomin()
         elif GISMapActions_action == GISMapActions.zoomout:
@@ -160,19 +170,19 @@ class GISExtent:
         #    GISMapActions.moveleft:self.moveleft(),
         #    GISMapActions.moveright:self.moveright(),
         #}
-        #        
+        #
         #switch[GISMapActions_action]
         self.GISVertex_upright.x = self.newmaxx
         self.GISVertex_upright.y = self.newmaxy
         self.GISVertex_bottomleft.x = self.newminx
         self.GISVertex_bottomleft.y = self.newminy
-        
-    
+
+
     def zoomin(self):
         self.newminx = ((self.getMinX()+self.getMaxX())-self.getWidth()/self.ZoomingFactor) /2
         self.newminy = ((self.getMinY()+self.getMaxY())-self.getHeight()/self.ZoomingFactor) /2
         self.newmaxx = ((self.getMinX()+self.getMaxX())+self.getWidth()/self.ZoomingFactor) /2
-        self.newmaxy = ((self.getMinY()+self.getMaxY())+self.getHeight()/self.ZoomingFactor) /2    
+        self.newmaxy = ((self.getMinY()+self.getMaxY())+self.getHeight()/self.ZoomingFactor) /2
 
     def zoomout(self):
         self.newminx = ((self.getMinX()+self.getMaxX())-self.getWidth()*self.ZoomingFactor) /2
@@ -194,16 +204,16 @@ class GISExtent:
 
     def moveright(self):
         self.newminx = self.getMinX() - self.getWidth() * self.MovingFactor
-        self.newmaxx = self.getMaxX()-self.getWidth() * self.MovingFactor 
+        self.newmaxx = self.getMaxX()-self.getWidth() * self.MovingFactor
 
     def gopre(self):
         [self.newminx,self.newminy,self.newmaxx,self.newmaxy ]= GISExtent.action_record[GISExtent.now_pointer-1]
-        GISExtent.now_pointer-=1  
-    
+        GISExtent.now_pointer-=1
+
     def nextone(self):
         [self.newminx,self.newminy,self.newmaxx,self.newmaxy ]= GISExtent.action_record[GISExtent.now_pointer+1]
-        GISExtent.now_pointer+=1  
-    
+        GISExtent.now_pointer+=1
+
 
     def copyFrom(self,GISExtent_extent):
         self.GISVertex_upright.copyFrom(GISExtent_extent.GISVertex_upright)
@@ -215,7 +225,7 @@ class GISVertex:
     def __init__(self,x,y):
         self.x = x;
         self.y = y;
-    
+
     def Distance(self,GISVertex_anothervertex):
         # 返回距离
         distance = math.sqrt((self.x-GISVertex_anothervertex.x)*(self.x - GISVertex_anothervertex.x)+pow((self.y-GISVertex_anothervertex.y),2));
@@ -231,7 +241,7 @@ class GISPoint(GISSpatial):
     def __init__(self,GISVertex_onevertex):
         self.GISVertex_centroid = GISVertex_onevertex
         self.GISExtent_extent = GISExtent(GISVertex_onevertex,GISVertex_onevertex)
-    
+
     def draw(self,qwidget_obj,qp,GISView_view):
         Point_screenpoint = GISView_view.ToScreenPoint(self.GISVertex_centroid)
         pen = QPen(Qt.red, 5)
@@ -246,7 +256,7 @@ class GISPoint(GISSpatial):
 class GISLine(GISSpatial):
     def __init__(self,List_allvertex):
         self.List_allvertex = List_allvertex
-    
+
     def draw(self,qwidget_obj,qp,GISView_view):
         qLineFsToScreenList = GISView_view.toScreenLine(self.List_allvertex)
         for qLineF in qLineFsToScreenList:
@@ -275,12 +285,13 @@ class GISLine(GISSpatial):
 class GISPolygon(GISSpatial):
     def __init__(self,List_allvertex):
         self.List_allvertex = List_allvertex
-    
+
     def draw(self,qwidget_obj,qp,GISView_view):
         qPolygonFsToScreen = GISView_view.toScreenPolygon(self.List_allvertex)
         qwidget_obj.scene.addItem(QGraphicsPolygonItem(QPolygonF(qPolygonFsToScreen)))
             #pen = QPen(Qt.blue, 1, Qt.SolidLine)
             #qwidget_obj.scene.addLine(qLineF , pen)
+
         return
 
     def Distance(self):
@@ -293,8 +304,7 @@ class GISView:
 
     def __init__(self,GISExtent_extent,Qrect_rectangle):
         self.Update(GISExtent_extent,Qrect_rectangle)
-        print(Qrect_rectangle.width())
-    
+
     def Update(self,GISExtent_extent,Qrectrectangle):
         self.GISExtent_currentmapextent = GISExtent_extent
         self.MapWindowSize = Qrectrectangle
@@ -313,15 +323,17 @@ class GISView:
         ScreenX = (GISVertex_onevertex.x-self.MapMinX)/self.ScaleX
         ScreenY = self.WinH-(GISVertex_onevertex.y-self.MapMinY)/self.ScaleY
         point = QPoint(int(ScreenX),int(ScreenY))
+
         return point
-    
+
     def toScreenVertex(self,onevertex):
         #print(GISVertex_onevertex.x)
         ScreenX = (onevertex.x-self.MapMinX)/self.ScaleX
         ScreenY = self.WinH-(onevertex.y-self.MapMinY)/self.ScaleY
         onevertex = GISVertex(ScreenX,ScreenY)
+
         return onevertex
-    
+
     def toScreenLine(self,listVertex):
         qLineFs = []
         listPointF = []
@@ -335,6 +347,8 @@ class GISView:
             qLineF = QLineF(listPointF[i],listPointF[i+1])
             qLineFs.append(qLineF)
 
+        return qLineFs
+
     def toScreenPolygon(self,listVertex):
         listPoints = []
         nPoints = 0
@@ -344,7 +358,7 @@ class GISView:
             listPoints.append(vertex.x)
             listPoints.append(vertex.y)
             nPoints+=1
-        
+
         polygon = QPolygon()
         polygon.setPoints( listPoints)
 
@@ -378,42 +392,51 @@ class GISView:
 
 class GISShapefile:
     def readshp(self,shp):
-        name = os.path.basename(shp)
+        name = os.path.splitext(shp)[0]
         # 读出二进制
-        myshp = open(shp, "rb")
+        myshp = open(name+".shp", "rb")
+        mydbf = open(name+".dbf" ,"rb")
         # 从二进制读shp对象
-        sf = shapefile.Reader(shp=myshp)
+        sf = shapefile.Reader(shp=myshp,dbf=mydbf)
         # 图层
-        # shapes = sf.shapes()
-        #layerType = shapes[0].shapeType
         layerType = sf.shapeType
-        #print(layerType == 1 or 8)
         if layerType == 1 or layerType == 8:
             layer = self.readPoint(sf,layerType,name)
         elif layerType ==3:
             layer = self.readLine(sf,layerType,name)
-            
+
         elif layerType == 5:
             layer = self.readPolygon(sf,layerType,name)
         else:
             QMessageBox.information(self,'提示','暂时不支持，请升级后再来。')
-        
+
         return layer
 
     def readPoint(self,sf,layerType,name):
         features = []
+        # 每条字段的名称、类型等（竖）
+        fieldKind = sf.fields
+        fieldKind[0] = list(fieldKind[0])
+        # 每个空间对象是一个列表，由一个大列表存放在recs中
+        recs = sf.records()
+        n = 0
         # 这里细化到组成每个空间对象的点
         for shape in sf.shapes():
             for point in shape.points:
                 onePoint = GISPoint(GISVertex(point[0],point[1]))
-                onefeature = GISFeature(onePoint,GISAttribute())
+                onefeature = GISFeature(onePoint,GISAttribute(recs[n]))
                 features.append(onefeature)
-
+                n +=1
+        
         layerExtent = sf.bbox
-        GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[1],layerExtent[3]))
+        # 这里的列表四个元素存储了两点的xy坐标，写成0113，结果范围出错。。。
+        GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
         GISLayer_layer = GISLayer(name,layerType,GISExtent_extent)
+        GISLayer_layer.addAttriColumn(fieldKind)
+
         for feature in features:
             GISLayer_layer.AddFeature(feature)
+
         return GISLayer_layer#,Re,Ro
 
     def readLine(self,sf,layerType,name):
@@ -449,7 +472,7 @@ class GISShapefile:
         for shape in sf.shapes():
             for point in shape.points:
                 vertexPerPolygon.append(GISVertex(int(point[0]),int(point[1])))
-            
+
             allPolygon.append(GISPolygon(vertexPerPolygon))
 
         for polygon in allPolygon:
@@ -463,11 +486,11 @@ class GISShapefile:
             GISLayer_layer.AddFeature(feature)
 
         return GISLayer_layer
-        
+
     def pointPattern(self,GISLayer_layer,minValue,xMin,yMin,xMax,yMax):
         extentArea = (xMax-xMin)*(yMax-yMin)
         Re = 0.5 /((GISLayer_layer.FeatureCount()/extentArea)**0.5)
         Ro = sum(minValue)/(GISLayer_layer.FeatureCount())
         return Re,Ro
 
-    
+

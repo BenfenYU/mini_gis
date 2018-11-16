@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from from_ui import *
+from fromUi import *
 import random,os,copy
 from BasicClasses import *
 from PyQt5.QtGui import *
@@ -22,7 +22,6 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         Ui_Form.__init__(self)
         self.setupUi(self)
         self.frameGeometryF = QRectF(self.graphicsView.frameGeometry())
-        print(self.frameGeometryF.width())
         global view
         view = GISView(GISExtent(GISVertex(0,0),GISVertex(100,100)),self.frameGeometryF)
 
@@ -35,17 +34,27 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         self.pushButton_8.clicked.connect(self.change_map)
         self.pushButton_9.clicked.connect(self.change_map)
         self.pushButton_10.clicked.connect(self.change_map)
-        self.pushButton_2.clicked.connect(self.openshp)
+        self.pushButton_11.clicked.connect(self.openDbf)
+        self.pushButton_2.clicked.connect(self.openFileNameDialog)
         self.pushButton_9.setDisabled(True)
         self.pushButton_10.setDisabled(True)
 
         self.scene = QtWidgets.QGraphicsScene(self.frameGeometryF)
         self.graphicsView.setScene(self.scene)
 
-    def openshp(self):
+
+    def openFileNameDialog(self):    
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", 
+        "","ESRI shp (*.shp)", options=options)
+        if fileName:
+            self.openshp(fileName)
+
+    def openshp(self,filename):
         global layer
         sf = GISShapefile()
-        path = os.path.abspath('./test/ne_110m_ocean/ne_110m_ocean.shp')
+        path = os.path.abspath(filename)
         layer = sf.readshp(path)
         layer.bool_drawAttributeOrNot = False
         print('读图完毕，开始画图')
@@ -122,12 +131,40 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         view = copy.deepcopy(viewList[nowPointer-1])
         nowPointer -=1
         self.updatethemap = True
-        self.update()
+        self.paint()
 
     def redo(self):
         global nowPointer,view
         view = copy.deepcopy(viewList[nowPointer+1])
         nowPointer +=1
         self.updatethemap = True
-        self.update()
+        self.paint()
+
+    def openDbf(self):
+        if not layer:
+            QMessageBox.information(self,'提示','请首先加载图层')
+            return
+        
+        fieldKind = layer.getAttriColum()
+        columnName = []
+        for fieldkind in fieldKind:
+            columnName.append(fieldkind[0])
+
+        featureNum = layer.FeatureCount()
+        features = layer.getFeature()
+
+        dbfWin = QDialog()
+        dbfWin.dbfTable = QTableWidget(featureNum,len(columnName))
+        dbfWin.dbfTable.setHorizontalHeaderLabels(columnName)
+        for m in range(0,len(features)):
+            for n in range(0,len(columnName)):
+                newItem = QTableWidgetItem(features[m].getAttribute(n))  
+                dbfWin.dbfTable.setItem(m, n, newItem)  
+        layout = QHBoxLayout() 
+        layout.addWidget(dbfWin)  
+        dbfWin.setLayout(layout)
+
+        dbfWin.show()
+        sys.exit(app.exec_())    
+
 

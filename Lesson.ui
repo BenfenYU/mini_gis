@@ -18,7 +18,7 @@
     <rect>
      <x>0</x>
      <y>10</y>
-     <width>789</width>
+     <width>1331</width>
      <height>51</height>
     </rect>
    </property>
@@ -86,20 +86,21 @@
       </property>
      </widget>
     </item>
+    <item>
+     <widget class="QPushButton" name="pushButton_2">
+      <property name="text">
+       <string>open shp</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButton_11">
+      <property name="text">
+       <string>open db</string>
+      </property>
+     </widget>
+    </item>
    </layout>
-  </widget>
-  <widget class="QPushButton" name="pushButton_2">
-   <property name="geometry">
-    <rect>
-     <x>800</x>
-     <y>20</y>
-     <width>94</width>
-     <height>28</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>open shp</string>
-   </property>
   </widget>
   <widget class="QGraphicsView" name="graphicsView">
    <property name="geometry">

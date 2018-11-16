@@ -91,8 +91,10 @@ NODATA = -10e38 # as per the ESRI shapefile spec, only used for m-values.
 
 if PYTHON3:
     def b(v, encoding='utf-8', encodingErrors='strict'):
+        # 判断v是否是str的实例
         if isinstance(v, str):
             # For python 3 encode str to bytes.
+            # 以指定的编码格式编码字符串
             return v.encode(encoding, encodingErrors)
         elif isinstance(v, bytes):
             # Already bytes.
@@ -102,11 +104,13 @@ if PYTHON3:
             return b""
         else:
             # Force string representation.
+            # 强制字符串表示
             return str(v).encode(encoding, encodingErrors)
 
     def u(v, encoding='utf-8', encodingErrors='strict'):
         if isinstance(v, bytes):
             # For python 3 decode bytes to str.
+            # 解码
             return v.decode(encoding, encodingErrors)
         elif isinstance(v, str):
             # Already str.
@@ -121,54 +125,63 @@ if PYTHON3:
     def is_string(v):
         return isinstance(v, str)
 
-else:
-    def b(v, encoding='utf-8', encodingErrors='strict'):
-        if isinstance(v, unicode):
-            # For python 2 encode unicode to bytes.
-            return v.encode(encoding, encodingErrors)
-        elif isinstance(v, bytes):
-            # Already bytes.
-            return v
-        elif v is None:
-            # Since we're dealing with text, interpret None as ""
-            return ""
-        else:
-            # Force string representation.
-            return unicode(v).encode(encoding, encodingErrors)
-
-    def u(v, encoding='utf-8', encodingErrors='strict'):
-        if isinstance(v, bytes):
-            # For python 2 decode bytes to unicode.
-            return v.decode(encoding, encodingErrors)
-        elif isinstance(v, unicode):
-            # Already unicode.
-            return v
-        elif v is None:
-            # Since we're dealing with text, interpret None as ""
-            return u""
-        else:
-            # Force string representation.
-            return bytes(v).decode(encoding, encodingErrors)
-
-    def is_string(v):
-        return isinstance(v, basestring)
+#else:
+#    def b(v, encoding='utf-8', encodingErrors='strict'):
+#        if isinstance(v, unicode):
+#            # For python 2 encode unicode to bytes.
+#            return v.encode(encoding, encodingErrors)
+#        elif isinstance(v, bytes):
+#            # Already bytes.
+#            return v
+#        elif v is None:
+#            # Since we're dealing with text, interpret None as ""
+#            return ""
+#        else:
+#            # Force string representation.
+#            return unicode(v).encode(encoding, encodingErrors)
+#
+#    def u(v, encoding='utf-8', encodingErrors='strict'):
+#        if isinstance(v, bytes):
+#            # For python 2 decode bytes to unicode.
+#            return v.decode(encoding, encodingErrors)
+#        elif isinstance(v, unicode):
+#            # Already unicode.
+#            return v
+#        elif v is None:
+#            # Since we're dealing with text, interpret None as ""
+#            return u""
+#        else:
+#            # Force string representation.
+#            return bytes(v).decode(encoding, encodingErrors)
+#
+#    def is_string(v):
+#        return isinstance(v, basestring)
 
 
 # Begin
-
+# array是保存相同类型的动态数组，主要用于二进制上的缓冲区，流的操作
 class _Array(array.array):
     """Converts python tuples to lits of the appropritate type.
     Used to unpack different shapefile header parts."""
+    # 返回一个实例的代码表示形式，通常用来重新构造这个实例
     def __repr__(self):
+        # 转为列表？
         return str(self.tolist())
 
 def signed_area(coords):
     """Return the signed area enclosed by a ring using the linear time
     algorithm. A value >= 0 indicates a counter-clockwise oriented ring.
     """
+    # map(),第一个参数 function 以参数序列中的每一个元素调用 function 函数，返回包含每次 function 函数返回值的新列表
+    # zip() 函数用于将可迭代的对象作为参数，将对象中对应的元素打包成一个个元组，然后返回由这些元组组成的对象,
+    # 我们可以使用 list() 转换来输出列表。
+    # 单星号（*）：*agrs将所以参数以元组(tuple)的形式导入,此外，单星号的另一个用法是解压参数列表,将列表拆成一个个元素
+    # 双星号（**）：**kwargs将参数以字典的形式导入
     xs, ys = map(list, zip(*coords))
+    # ？
     xs.append(xs[1])
     ys.append(ys[1])
+    # sum函数的第一个参数为iterable -- 可迭代对象
     return sum(xs[i]*(ys[i+1]-ys[i-1]) for i in range(1, len(coords)))/2.0
 
 class Shape(object):
@@ -183,6 +196,8 @@ class Shape(object):
         are designated by their starting index in geometry record's
         list of shapes. For MultiPatch geometry, partTypes designates
         the patch type of each of the parts. 
+        parts的定义：一个形状类型包括多个由点组成的形状，并且在一项地理记录里，这些shapes就叫做parts
+        parttypes指定了每个parts的类型
         """
         self.shapeType = shapeType
         self.points = points or []
@@ -190,10 +205,15 @@ class Shape(object):
         if partTypes:
             self.partTypes = partTypes
 
+    # 将 property 函数用作装饰器可以很方便的创建只读属性
+    # 将 __geo_interface__() 方法转化成同名只读属性的 getter 方法
     @property
     def __geo_interface__(self):
+        # 如果parts或points不存在
         if not self.parts or not self.points:
-            Exception('Invalid shape, cannot create GeoJSON representation. Shape type is "%s" but does not contain any parts and/or points.' % SHAPETYPE_LOOKUP[self.shapeType])
+            # 触发任意类型的错误，报错后呢？？？
+            Exception('Invalid shape, cannot create GeoJSON representation. \
+            Shape type is "%s" but does not contain any parts and/or points.' % SHAPETYPE_LOOKUP[self.shapeType])
 
         if self.shapeType in [POINT, POINTM, POINTZ]:
             return {
@@ -206,6 +226,7 @@ class Shape(object):
             'coordinates': tuple([tuple(p) for p in self.points])
             }
         elif self.shapeType in [POLYLINE, POLYLINEM, POLYLINEZ]:
+            # 仅一个part
             if len(self.parts) == 1:
                 return {
                 'type': 'LineString',
@@ -221,7 +242,7 @@ class Shape(object):
                     else:
                         coordinates.append(tuple([tuple(p) for p in self.points[ps:part]]))
                         ps = part
-                else:
+                else:# ？？？这个else接谁
                     coordinates.append(tuple([tuple(p) for p in self.points[part:]]))
                 return {
                 'type': 'MultiLineString',
@@ -266,9 +287,12 @@ class Shape(object):
                     }
         else:
             raise Exception('Shape type "%s" cannot be represented as GeoJSON.' % SHAPETYPE_LOOKUP[self.shapeType])
+            # 搞了半天是转为GEOJSON
 
+    # 类可以不用实例化就可以调用该方法 C.f()，当然也可以实例化后调用 C().f()
     @staticmethod
     def _from_geojson(geoj):
+    # 从geoJSON转过来，geoj是geojson对象
         # create empty shape
         shape = Shape()
         # set shapeType
