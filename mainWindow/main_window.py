@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from fromUi import *
-import random,os,copy
-from BasicClasses import *
+from .fromUi import *
+import random,os,copy,sys
+from basicClass import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5 import *
@@ -146,25 +146,38 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
             return
         
         fieldKind = layer.getAttriColum()
+        # 存储有多少个属性
         columnName = []
         for fieldkind in fieldKind:
             columnName.append(fieldkind[0])
 
+        # 存储有多少条记录
         featureNum = layer.FeatureCount()
         features = layer.getFeature()
 
-        dbfWin = QDialog()
-        dbfWin.dbfTable = QTableWidget(featureNum,len(columnName))
-        dbfWin.dbfTable.setHorizontalHeaderLabels(columnName)
+        self.dbfWin = QWidget()
+        self.dbfWin.dbfTable = QTableWidget()
+        self.dbfWin.dbfTable.setRowCount(featureNum)
+        self.dbfWin.dbfTable.setColumnCount(len(columnName)+1)
+        self.dbfWin.setGeometry(self.frameGeometry())
+        self.dbfWin.setWindowTitle(layer.name+'的属性表')
+
+
+        # 循环给窗体表格赋值
+        for n in range(0,len(columnName)):
+            item = QTableWidgetItem(columnName[n])
+            self.dbfWin.dbfTable.setItem(0,n,item)
+
         for m in range(0,len(features)):
+            # print(m)
             for n in range(0,len(columnName)):
-                newItem = QTableWidgetItem(features[m].getAttribute(n))  
-                dbfWin.dbfTable.setItem(m, n, newItem)  
-        layout = QHBoxLayout() 
-        layout.addWidget(dbfWin)  
-        dbfWin.setLayout(layout)
+                newItem = QTableWidgetItem(str(features[m].getAttribute(n)))  
+                self.dbfWin.dbfTable.setItem(m+1, n, newItem)  
+        self.dbfWin.dbfTable.move(0,0)
 
-        dbfWin.show()
-        sys.exit(app.exec_())    
-
-
+        self.dbfWin.layout = QVBoxLayout() 
+        self.dbfWin.layout.addWidget(self.dbfWin.dbfTable)  
+        self.dbfWin.setLayout(self.dbfWin.layout)
+        
+        self.dbfWin.show()
+        

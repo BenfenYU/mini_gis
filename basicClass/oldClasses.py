@@ -26,7 +26,7 @@ class GISMapActions(Enum):
 #-----------------------------------------------------------
 
 class GISLayer: # layer类建一个字典，全类的静态属性，用来存储不同的图层。所
-    def __init__(self,name,SHAPETYPE_ShapeType,GISExtent_Extent):
+    def __init__(self,name,SHAPETYPE_ShapeType,GISExtent_Extent,deleteFlag = ()):
         self.name = name
         self.shapeType = SHAPETYPE_ShapeType
         self.GISExtent_Extent = GISExtent_Extent
@@ -34,6 +34,7 @@ class GISLayer: # layer类建一个字典，全类的静态属性，用来存储
         self.labelIndex = 0
         self.__GISFeature_Features = []
         self._attriColumn = []
+        self.__deleteFlag = ()
 
     def draw(self,qwidget_obj,qp,GISView_view):
         # 每个都画了
@@ -415,8 +416,9 @@ class GISShapefile:
     def readPoint(self,sf,layerType,name):
         features = []
         # 每条字段的名称、类型等（竖）
-        fieldKind = sf.fields
-        fieldKind[0] = list(fieldKind[0])
+        fieldKind = copy.deepcopy(sf.fields)
+        fieldKind0 = fieldKind[0]
+        del fieldKind[0]
         # 每个空间对象是一个列表，由一个大列表存放在recs中
         recs = sf.records()
         n = 0
@@ -427,11 +429,11 @@ class GISShapefile:
                 onefeature = GISFeature(onePoint,GISAttribute(recs[n]))
                 features.append(onefeature)
                 n +=1
-        
+        print(len(features))       
         layerExtent = sf.bbox
         # 这里的列表四个元素存储了两点的xy坐标，写成0113，结果范围出错。。。
         GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
-        GISLayer_layer = GISLayer(name,layerType,GISExtent_extent)
+        GISLayer_layer = GISLayer(name,layerType,GISExtent_extent,fieldKind0)
         GISLayer_layer.addAttriColumn(fieldKind)
 
         for feature in features:
