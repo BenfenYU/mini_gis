@@ -29,6 +29,12 @@ class GISVertex:
     def copyFrom(self,GISVertex_v):
         self.x = GISVertex_v.x
         self.y = GISVertex_v.y
+    
+    def getX(self):
+        return self.x
+
+    def getY(self):
+        return self.y
 
 
 class GISExtent:

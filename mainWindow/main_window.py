@@ -65,7 +65,7 @@ class MainWindow(QtWidgets.QWidget,Ui_Form):
             distancelist = self.layers[index].distance(clickTuple)
             minValue = min(distancelist)
             minIndex = distancelist.index(minValue)
-            self.layers[index].draw(self,view,featureIndex = minIndex,\
+            self.layers[index].draw(self.scene,view,featureIndex = minIndex,\
             color = Qt.green)   
     
 
@@ -139,7 +139,7 @@ class MainWindow(QtWidgets.QWidget,Ui_Form):
 
         self.scene.clear()
         qp = QPainter()
-        layer.draw(self,view)
+        layer.draw(self.scene,view)
             
     
     # 指针永远指向当前地图显示的范围，不论是否为最新的
@@ -209,17 +209,26 @@ class MainWindow(QtWidgets.QWidget,Ui_Form):
         self.dbfWin.show()
 
 # 把大窗口和canvas分开，这样方便管理，在大窗口中初始化canvas的实例
-class Canvas(QtWidgets.QGraphicsScene):    
+# 画布上画图都是按照窗口的0,0位置开始索引的，所以必须要对xy进行调整，使之
+# 正好放在画布上
+class Canvas(QtWidgets.QGraphicsScene):   
     # 这个初始化忘记写self参数了，我tm。。。
     # 这里没有设置其大小，直接使用graphicsview的大小，坐标是从中心开始的
     # 传入主窗口的实例，用于调用函数
     def __init__(self, mainWindow = None,frameGeometryF = None):
         super().__init__(frameGeometryF) 
         self.mainWindow = mainWindow
+
+        #pen = QPen(Qt.red,10)
+        #self.addEllipse(6,72\
+        #, 10, 10, pen)
+
     
     # (5, 71, 1340, 620)
     def mousePressEvent(self,e): 
-        x,y = self.__transfer(e.scenePos().x(),e.scenePos().y())
+        vertex = GISVertex(e.screenPos().x(),e.screenPos().y())
+        x = vertex.getX()
+        y = vertex.getY()
 
         if self.mainWindow.layers :
             if self.mainWindow.click:
@@ -229,10 +238,13 @@ class Canvas(QtWidgets.QGraphicsScene):
             print(x,y)
 
             return
+    
+    def __screenToMap(self,view,vertex):
+        return view.ToMapVertex(vertex)
 
 
-    def __transfer(self,X,Y):
-        x = X-self.mainWindow.canvasFrameGeometryF.x()
-        y = Y - self.mainWindow.canvasFrameGeometryF.y()
-        
-        return x,y
+    #def __transfer(self,X,Y):
+    #    x = X-self.mainWindow.canvasFrameGeometryF.x()
+    #    y = Y - self.mainWindow.canvasFrameGeometryF.y()
+    #    
+    #    return x,y

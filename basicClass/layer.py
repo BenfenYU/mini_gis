@@ -4,7 +4,8 @@
 from .object import *
 
 class GISLayer: # layer类建一个字典，全类的静态属性，用来存储不同的图层。所
-    def __init__(self,name,SHAPETYPE_ShapeType,GISExtent_Extent,deleteFlag = ()):
+    def __init__(self,name,SHAPETYPE_ShapeType,GISExtent_Extent,\
+    deleteFlag = ()):
         self.name = name
         self.shapeType = SHAPETYPE_ShapeType
         self.GISExtent_Extent = GISExtent_Extent
@@ -14,18 +15,21 @@ class GISLayer: # layer类建一个字典，全类的静态属性，用来存储
         self._attriColumn = []
         self.__deleteFlag = ()
 
-    def draw(self,qwidget_obj,GISView_view,featureIndex = None,color = Qt.red,thickness = 10):
+    def draw(self,qwidget_obj,GISView_view,featureIndex = None,\
+    color = Qt.red,thickness = 10):
         # 不同参数不同处理
         if isinstance(featureIndex,list):
             return
         elif featureIndex:
             self.__GISFeature_Features[featureIndex].\
-            draw(qwidget_obj,GISView_view,self.bool_DrawAttributeOrNot,self.labelIndex)
+            draw(qwidget_obj,GISView_view,self.bool_DrawAttributeOrNot,\
+            self.labelIndex)
             return 
         else:
             # 每个都画了
             for i in range(len(self.__GISFeature_Features)):
-                self.__GISFeature_Features[i].draw(qwidget_obj,GISView_view,self.bool_DrawAttributeOrNot,self.labelIndex)
+                self.__GISFeature_Features[i].draw(qwidget_obj,GISView_view,\
+                self.bool_DrawAttributeOrNot,self.labelIndex)
 
     def AddFeature(self,GISFeature_feature):
         self.__GISFeature_Features.append(GISFeature_feature)
@@ -83,8 +87,8 @@ class GISView:
         self.MapMinX = self.GISExtent_currentmapextent.getMinX()
         self.MapMinY = self.GISExtent_currentmapextent.getMinY()
         # widh和height属性待补充
-        self.WinW = Qrectrectangle.width()
-        self.WinH = Qrectrectangle.height()
+        self.WinW = Qrectrectangle.width()-100
+        self.WinH = Qrectrectangle.height()-10
         self.MapW = self.GISExtent_currentmapextent.getWidth()
         self.MapH = self.GISExtent_currentmapextent.getHeight()
         self.ScaleX = self.MapW/self.WinW
@@ -93,8 +97,9 @@ class GISView:
     # 这里的转换有点有点多余，只要新建图层则必然要画，所以这个可以封装起来。
     def ToScreenPoint(self,GISVertex_onevertex):
         #print(GISVertex_onevertex.x)
-        ScreenX = (GISVertex_onevertex.x-self.MapMinX)/self.ScaleX
-        ScreenY = self.WinH-(GISVertex_onevertex.y-self.MapMinY)/self.ScaleY
+        ScreenX = (GISVertex_onevertex.x-self.MapMinX)/self.ScaleX + 5
+        ScreenY = self.WinH-(GISVertex_onevertex.y-self.MapMinY)/self.ScaleY\
+        + 71
         point = QPoint(int(ScreenX),int(ScreenY))
 
         return point
@@ -138,9 +143,9 @@ class GISView:
         return polygon
 
 
-    def ToMapVertex(self,Point_point):
-        MapX = self.ScaleX * Point_point.x()+self.MapMinX
-        MapY = self.ScaleY * (self.WinH-Point_point.y())+self.MapMinY
+    def toMapVertex(self,vertex):
+        MapX = self.ScaleX * vertex.x()+self.MapMinX
+        MapY = self.ScaleY * (self.WinH-vertex.y())+self.MapMinY
         return GISVertex(MapX,MapY)
 
     def ChangeView(self,GISMapActions_action):

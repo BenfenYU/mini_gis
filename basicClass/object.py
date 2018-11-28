@@ -44,9 +44,9 @@ class GISPoint(GISSpatial):
         Point_screenpoint = GISView_view.ToScreenPoint(self.GISVertex_centroid)
         pen = QPen(color, thickness)
         r = QPoint(Point_screenpoint.x(), Point_screenpoint.y())
-        print(Point_screenpoint.x(), Point_screenpoint.y())
+        #print(Point_screenpoint.x(), Point_screenpoint.y())
         # 用添加椭圆的方法画点
-        qwidget_obj.scene.addEllipse(Point_screenpoint.x(), Point_screenpoint.y()\
+        qwidget_obj.addEllipse(Point_screenpoint.x(), Point_screenpoint.y()\
         , thickness, thickness, pen)
 
     def distance(self,pointTuple):
