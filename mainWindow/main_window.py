@@ -6,24 +6,30 @@ from basicClass import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5 import *
-from PyQt5.QtCore import Qt,QRect,QPoint,QPointF,QLineF,QRectF
+from PyQt5.QtCore import Qt,QRect,QPoint,QPointF,QLineF,QRectF,pyqtSignal
 
 features = []
 view = None
 layer = None
+
 viewList = []
 nowPointer = -1
 
 # 继承两个类，qwidget类给构造函数，Ui_Form类给setupUi
-class Lesson(QtWidgets.QWidget,Ui_Form):
+class MainWindow(QtWidgets.QWidget,Ui_Form):
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
         Ui_Form.__init__(self)
         self.setupUi(self)
-        self.frameGeometryF = QRectF(self.graphicsView.frameGeometry())
+        self.canvasFrameGeometryF = QRectF(self.graphicsView.frameGeometry())
         global view
-        view = GISView(GISExtent(GISVertex(0,0),GISVertex(100,100)),self.frameGeometryF)
+        view = GISView(GISExtent(GISVertex(0,0),GISVertex(100,100)),\
+        self.canvasFrameGeometryF)
+        # 当前界面所有layer，以及需要显示的layer的索引
+        self.layers = []
+        self.nowLayer = [0]
+        self.click = True
 
         self.pushButton.clicked.connect(self.showOverview)
         self.pushButton_3.clicked.connect(self.change_map)
@@ -39,9 +45,29 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         self.pushButton_9.setDisabled(True)
         self.pushButton_10.setDisabled(True)
 
-        self.scene = QtWidgets.QGraphicsScene(self.frameGeometryF)
+        self.scene = Canvas(self,self.canvasFrameGeometryF)
         self.graphicsView.setScene(self.scene)
 
+        #self.statusBar()
+        onMousePressed = pyqtSignal()  
+        onMouseReleased =pyqtSignal()  
+        onMouseMoved = pyqtSignal()  
+        onMouseLeave = pyqtSignal()  
+        onMouseEnter = pyqtSignal()  
+
+        
+    
+    def clickSelect(self,clickTuple):
+        minIndex = None
+        # 当前显示的图层中计算距离
+        for index in self.nowLayer:
+            # 计算距离并找到最小值
+            distancelist = self.layers[index].distance(clickTuple)
+            minValue = min(distancelist)
+            minIndex = distancelist.index(minValue)
+            self.layers[index].draw(self,view,featureIndex = minIndex,\
+            color = Qt.green)   
+    
 
     def openFileNameDialog(self):    
         options = QFileDialog.Options()
@@ -57,6 +83,7 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         path = os.path.abspath(filename)
         layer = sf.readshp(path)
         layer.bool_drawAttributeOrNot = False
+        self.layers.append(layer)
         print('读图完毕，开始画图')
         self.showOverview()
         #QMessageBox.information(self,'提示','读取到'+str(layer.FeatureCount())+'个点'+'Re为：'+str(Re)+'。Ro为:'+str(Ro))
@@ -112,7 +139,7 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
 
         self.scene.clear()
         qp = QPainter()
-        layer.draw(self,qp,view)
+        layer.draw(self,view)
             
     
     # 指针永远指向当前地图显示的范围，不论是否为最新的
@@ -180,4 +207,32 @@ class Lesson(QtWidgets.QWidget,Ui_Form):
         self.dbfWin.setLayout(self.dbfWin.layout)
         
         self.dbfWin.show()
+
+# 把大窗口和canvas分开，这样方便管理，在大窗口中初始化canvas的实例
+class Canvas(QtWidgets.QGraphicsScene):    
+    # 这个初始化忘记写self参数了，我tm。。。
+    # 这里没有设置其大小，直接使用graphicsview的大小，坐标是从中心开始的
+    # 传入主窗口的实例，用于调用函数
+    def __init__(self, mainWindow = None,frameGeometryF = None):
+        super().__init__(frameGeometryF) 
+        self.mainWindow = mainWindow
+    
+    # (5, 71, 1340, 620)
+    def mousePressEvent(self,e): 
+        x,y = self.__transfer(e.scenePos().x(),e.scenePos().y())
+
+        if self.mainWindow.layers :
+            if self.mainWindow.click:
+                self.mainWindow.clickSelect((x,y))
+                print(x,y)
+        else:
+            print(x,y)
+
+            return
+
+
+    def __transfer(self,X,Y):
+        x = X-self.mainWindow.canvasFrameGeometryF.x()
+        y = Y - self.mainWindow.canvasFrameGeometryF.y()
         
+        return x,y

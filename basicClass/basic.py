@@ -1,4 +1,5 @@
 from enum import Enum
+import math
 
 class SHAPETYPE(Enum):
     point = 1
@@ -20,9 +21,9 @@ class GISVertex:
         self.x = x;
         self.y = y;
 
-    def Distance(self,GISVertex_anothervertex):
+    def distance(self,pointTuple):
         # 返回距离
-        distance = math.sqrt((self.x-GISVertex_anothervertex.x)*(self.x - GISVertex_anothervertex.x)+pow((self.y-GISVertex_anothervertex.y),2));
+        distance = math.sqrt((self.x-pointTuple[0])*(self.x - pointTuple[0])+pow((self.y-pointTuple[1]),2));
         return distance;
 
     def copyFrom(self,GISVertex_v):

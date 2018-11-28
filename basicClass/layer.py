@@ -14,10 +14,18 @@ class GISLayer: # layer类建一个字典，全类的静态属性，用来存储
         self._attriColumn = []
         self.__deleteFlag = ()
 
-    def draw(self,qwidget_obj,qp,GISView_view):
-        # 每个都画了
-        for i in range(len(self.__GISFeature_Features)):
-            self.__GISFeature_Features[i].draw(qwidget_obj,qp,GISView_view,self.bool_DrawAttributeOrNot,self.labelIndex)
+    def draw(self,qwidget_obj,GISView_view,featureIndex = None,color = Qt.red,thickness = 10):
+        # 不同参数不同处理
+        if isinstance(featureIndex,list):
+            return
+        elif featureIndex:
+            self.__GISFeature_Features[featureIndex].\
+            draw(qwidget_obj,GISView_view,self.bool_DrawAttributeOrNot,self.labelIndex)
+            return 
+        else:
+            # 每个都画了
+            for i in range(len(self.__GISFeature_Features)):
+                self.__GISFeature_Features[i].draw(qwidget_obj,GISView_view,self.bool_DrawAttributeOrNot,self.labelIndex)
 
     def AddFeature(self,GISFeature_feature):
         self.__GISFeature_Features.append(GISFeature_feature)
@@ -35,13 +43,20 @@ class GISLayer: # layer类建一个字典，全类的静态属性，用来存储
     def getFeature(self):
         return self.__GISFeature_Features
 
+    def distance(self,pointTuple):
+        distanceList = []
+        for feature in self.__GISFeature_Features:
+            distanceList.append(feature.distance(pointTuple))
+        
+        return distanceList
+
 class GISFeature:
     def __init__(self,GISSpatial_spatialpart,GISAttribute_attribute):
         self.GISSpatial_spatialpart = GISSpatial_spatialpart
         self.GISAttribute_attribute = GISAttribute_attribute
 
-    def draw(self,qwidget_obj,qp,GISView_view,bool_DrawAttributeOrNot,index):
-        self.GISSpatial_spatialpart.draw(qwidget_obj,qp,GISView_view)
+    def draw(self,qwidget_obj,GISView_view,bool_DrawAttributeOrNot,index):
+        self.GISSpatial_spatialpart.draw(qwidget_obj,GISView_view)
         if bool_DrawAttributeOrNot:
             self.GISAttribute_attribute.draw(qwidget_obj,qp,GISView_view,self.GISSpatial_spatialpart.GISVertex_centroid,index)
 
@@ -52,6 +67,9 @@ class GISFeature:
 
     def getAttribute(self,index):
         return self.GISAttribute_attribute.GetValue(index)
+    
+    def distance(self,pointTuple):
+        return self.GISSpatial_spatialpart.distance(pointTuple)
 
 class GISView:
 

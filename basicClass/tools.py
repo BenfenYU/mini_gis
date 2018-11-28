@@ -39,7 +39,7 @@ class GISShapefile:
                 onefeature = GISFeature(onePoint,GISAttribute(recs[n]))
                 features.append(onefeature)
                 n +=1
-        print(len(features))       
+         
         layerExtent = sf.bbox
         # 这里的列表四个元素存储了两点的xy坐标，写成0113，结果范围出错。。。
         GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
@@ -55,6 +55,13 @@ class GISShapefile:
         vertexInOneline = []
         allLines = []
         features = []
+        # 每条字段的名称、类型等（竖）
+        fieldKind = copy.deepcopy(sf.fields)
+        fieldKind0 = fieldKind[0]
+        del fieldKind[0]
+        # 每个空间对象是一个列表，由一个大列表存放在recs中
+        recs = sf.records()
+        n = 0
 
         for shape in sf.shapes():
             for point in shape.points:
@@ -64,11 +71,13 @@ class GISShapefile:
             allLines.append(GISLine(vertexInOneline))
 
         for line in allLines:
-            features.append(GISFeature(line,GISAttribute()))
+            index = allLines.index(line)
+            features.append(GISFeature(line,GISAttribute(recs[index])))
 
-        layerExtent = sf.bbox
+        layerExtent=sf.bbox
         GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
-        GISLayer_layer = GISLayer(name,layerType,GISExtent_extent)
+        GISLayer_layer = GISLayer(name,layerType,GISExtent_extent,fieldKind0)
+        GISLayer_layer.addAttriColumn(fieldKind)
 
         for feature in features:
             GISLayer_layer.AddFeature(feature)
@@ -80,6 +89,13 @@ class GISShapefile:
         vertexPerPolygon = []
         allPolygon = []
         features = []
+        # 每条字段的名称、类型等（竖）
+        fieldKind = copy.deepcopy(sf.fields)
+        fieldKind0 = fieldKind[0]
+        del fieldKind[0]
+        # 每个空间对象是一个列表，由一个大列表存放在recs中
+        recs = sf.records()
+        n = 0
 
         for shape in sf.shapes():
             for point in shape.points:
@@ -88,11 +104,12 @@ class GISShapefile:
             allPolygon.append(GISPolygon(vertexPerPolygon))
 
         for polygon in allPolygon:
-            features.append(GISFeature(polygon,GISAttribute()))
+            features.append(GISFeature(polygon,GISAttribute(recs[allPolygon.index(polygon)])))
 
         layerExtent = sf.bbox
         GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
-        GISLayer_layer = GISLayer(name,layerType,GISExtent_extent)
+        GISLayer_layer = GISLayer(name,layerType,GISExtent_extent,fieldKind0)
+        GISLayer_layer.addAttriColumn(fieldKind)
 
         for feature in features:
             GISLayer_layer.AddFeature(feature)
