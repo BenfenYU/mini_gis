@@ -40,29 +40,31 @@ class GISPoint(GISSpatial):
         self.GISVertex_centroid = GISVertex_onevertex
         self.GISExtent_extent = GISExtent(GISVertex_onevertex,GISVertex_onevertex)
 
-    def draw(self,qwidget_obj,GISView_view,color = Qt.red,thickness = 5):
-        Point_screenpoint = GISView_view.ToScreenPoint(self.GISVertex_centroid)
+    def draw(self,qwidget_obj,GISView_view,qp,color,thickness,index):
+        Point_screenpoint = GISView_view.toScreenPoint(self.GISVertex_centroid)
         pen = QPen(color, thickness)
         r = QPoint(Point_screenpoint.x(), Point_screenpoint.y())
         #print(Point_screenpoint.x(), Point_screenpoint.y())
         # 用添加椭圆的方法画点
-        qwidget_obj.addEllipse(Point_screenpoint.x(), Point_screenpoint.y()\
-        , thickness, thickness, pen)
+        qp.setPen(pen)
+        qp.drawPoint(Point_screenpoint)
 
-    def distance(self,pointTuple):
-        return self.GISVertex_centroid.distance(pointTuple)
+    def distance(self,vertex):
+        return self.GISVertex_centroid.distance(vertex)
 
 class GISLine(GISSpatial):
     def __init__(self,List_allvertex):
         self.List_allvertex = List_allvertex
 
-    def draw(self,qwidget_obj,GISView_view,color = Qt.red,thickness = 5):
-        qLineFsToScreenList = GISView_view.toScreenLine(self.List_allvertex)
-        for qLineF in qLineFsToScreenList:
-            pen = QPen(color, thickness)
-            qwidget_obj.scene.addLine(qLineF,pen)
-            #pen = QPen(Qt.blue, 1, Qt.SolidLine)
-            #qwidget_obj.scene.addLine(qLineF , pen)
+    def draw(self,qwidget_obj,GISView_view,qp,color ,thickness ,index):
+        qPoints = [GISView_view.toScreenPoint(vertex) 
+        for vertex in self.List_allvertex]
+        qp.drawPolyline(QPolygon(qPoints))
+        #for qLineF in qLineFsToScreenList:
+        #    pen = QPen(color, thickness)
+        #    qwidget_obj.scene.addLine(qLineF,pen)
+        #    #pen = QPen(Qt.blue, 1, Qt.SolidLine)
+        #    #qwidget_obj.scene.addLine(qLineF , pen)
 
     def distance(self,GISVertex_anothervertex):
         # 补充点到直线的距离
@@ -85,10 +87,12 @@ class GISPolygon(GISSpatial):
     def __init__(self,List_allvertex):
         self.List_allvertex = List_allvertex
 
-    def draw(self,qwidget_obj,GISView_view,color = Qt.red,thickness = 5):
+    def draw(self,qwidget_obj,GISView_view,qp,color,thickness,\
+    index):
         qPolygonFsToScreen = GISView_view.toScreenPolygon(self.List_allvertex)
         pen = QPen(color, thickness)
-        qwidget_obj.scene.addPolygon(QPolygonF(qPolygonFsToScreen),pen)
+        qp.setPen(pen)
+        qp.drawPolygon(qPolygonFsToScreen)
             #pen = QPen(Qt.blue, 1, Qt.SolidLine)
             #qwidget_obj.scene.addLine(qLineF , pen)
 

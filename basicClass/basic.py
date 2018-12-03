@@ -21,9 +21,10 @@ class GISVertex:
         self.x = x;
         self.y = y;
 
-    def distance(self,pointTuple):
+    def distance(self,vertex):
         # 返回距离
-        distance = math.sqrt((self.x-pointTuple[0])*(self.x - pointTuple[0])+pow((self.y-pointTuple[1]),2));
+        distance = math.sqrt((self.x-vertex.getX())*(self.x - vertex.getX())\
+        +pow((self.y-vertex.getY()),2));
         return distance;
 
     def copyFrom(self,GISVertex_v):

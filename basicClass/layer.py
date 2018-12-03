@@ -15,24 +15,28 @@ class GISLayer: # layer类建一个字典，全类的静态属性，用来存储
         self._attriColumn = []
         self.__deleteFlag = ()
 
-    def draw(self,qwidget_obj,GISView_view,featureIndex = None,\
-    color = Qt.red,thickness = 10):
+    def draw(self,qwidget_obj,GISView_view,qp = None,\
+    color = Qt.red,thickness = 5,featureIndex = None):
         # 不同参数不同处理
         if isinstance(featureIndex,list):
             return
         elif featureIndex:
             self.__GISFeature_Features[featureIndex].\
             draw(qwidget_obj,GISView_view,self.bool_DrawAttributeOrNot,\
-            self.labelIndex)
+            qp,color ,thickness ,featureIndex)
             return 
         else:
             # 每个都画了
             for i in range(len(self.__GISFeature_Features)):
                 self.__GISFeature_Features[i].draw(qwidget_obj,GISView_view,\
-                self.bool_DrawAttributeOrNot,self.labelIndex)
+                self.bool_DrawAttributeOrNot,qp,color,thickness\
+                ,self.labelIndex)
 
     def AddFeature(self,GISFeature_feature):
-        self.__GISFeature_Features.append(GISFeature_feature)
+        self.__GISFeature_Features.append(GISFeature_feature)    
+
+    def getFeature(self):
+        return self.__GISFeature_Features
 
     def FeatureCount(self):
         return len(self.__GISFeature_Features)
@@ -43,14 +47,11 @@ class GISLayer: # layer类建一个字典，全类的静态属性，用来存储
 
     def getAttriColum(self):
         return self._attriColumn
-    
-    def getFeature(self):
-        return self.__GISFeature_Features
 
-    def distance(self,pointTuple):
+    def distance(self,vertex):
         distanceList = []
         for feature in self.__GISFeature_Features:
-            distanceList.append(feature.distance(pointTuple))
+            distanceList.append(feature.distance(vertex))
         
         return distanceList
 
@@ -59,10 +60,16 @@ class GISFeature:
         self.GISSpatial_spatialpart = GISSpatial_spatialpart
         self.GISAttribute_attribute = GISAttribute_attribute
 
-    def draw(self,qwidget_obj,GISView_view,bool_DrawAttributeOrNot,index):
-        self.GISSpatial_spatialpart.draw(qwidget_obj,GISView_view)
+    def draw(self,qwidget_obj,GISView_view,bool_DrawAttributeOrNot,qp\
+    ,color,thickness,index):
+        qp.begin(qwidget_obj)
+        qp.setPen(QPen(color,thickness))
+        self.GISSpatial_spatialpart.draw(qwidget_obj,GISView_view,qp,\
+        color,thickness,index)
         if bool_DrawAttributeOrNot:
-            self.GISAttribute_attribute.draw(qwidget_obj,qp,GISView_view,self.GISSpatial_spatialpart.GISVertex_centroid,index)
+            self.GISAttribute_attribute.draw(qwidget_obj,qp,GISView_view,\
+            self.GISSpatial_spatialpart.GISVertex_centroid,index)
+        qp.end()
 
     #def drawLine(self,qwidget_obj,qp,GISView_view,bool_DrawAttributeOrNot,index):
     #    self.GISSpatial_spatialpart.draw(qwidget_obj,qp,GISView_view)
@@ -72,8 +79,8 @@ class GISFeature:
     def getAttribute(self,index):
         return self.GISAttribute_attribute.GetValue(index)
     
-    def distance(self,pointTuple):
-        return self.GISSpatial_spatialpart.distance(pointTuple)
+    def distance(self,vertex):
+        return self.GISSpatial_spatialpart.distance(vertex)
 
 class GISView:
 
@@ -95,7 +102,7 @@ class GISView:
         self.ScaleY = self.MapH/self.WinH
 
     # 这里的转换有点有点多余，只要新建图层则必然要画，所以这个可以封装起来。
-    def ToScreenPoint(self,GISVertex_onevertex):
+    def toScreenPoint(self,GISVertex_onevertex):
         #print(GISVertex_onevertex.x)
         ScreenX = (GISVertex_onevertex.x-self.MapMinX)/self.ScaleX + 5
         ScreenY = self.WinH-(GISVertex_onevertex.y-self.MapMinY)/self.ScaleY\
@@ -144,8 +151,8 @@ class GISView:
 
 
     def toMapVertex(self,vertex):
-        MapX = self.ScaleX * vertex.x()+self.MapMinX
-        MapY = self.ScaleY * (self.WinH-vertex.y())+self.MapMinY
+        MapX = self.ScaleX * (vertex.getX()-5)+self.MapMinX
+        MapY = self.ScaleY * (self.WinH-(vertex.getY()-71))+self.MapMinY
         return GISVertex(MapX,MapY)
 
     def ChangeView(self,GISMapActions_action):

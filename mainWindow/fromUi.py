@@ -51,9 +51,9 @@ class Ui_Form(object):
         self.pushButton_11 = QtWidgets.QPushButton(self.horizontalLayoutWidget_3)
         self.pushButton_11.setObjectName("pushButton_11")
         self.horizontalLayout_3.addWidget(self.pushButton_11)
-        self.graphicsView = QtWidgets.QGraphicsView(Form)
-        self.graphicsView.setGeometry(QtCore.QRect(5, 71, 1340, 620))
-        self.graphicsView.setObjectName("graphicsView")
+        #self.graphicsView = QtWidgets.QGraphicsView(Form)
+        #self.graphicsView.setGeometry(QtCore.QRect(5, 71, 1340, 620))
+        #self.graphicsView.setObjectName("graphicsView")
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
