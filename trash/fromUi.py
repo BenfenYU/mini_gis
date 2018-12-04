@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './mainWindow/Lesson.ui'
+# Form implementation generated from reading ui file 'Lesson.ui'
 #
 # Created by: PyQt5 UI code generator 5.11.3
 #
@@ -13,7 +13,7 @@ class Ui_Form(object):
         Form.setObjectName("Form")
         Form.resize(1346, 608)
         self.horizontalLayoutWidget_3 = QtWidgets.QWidget(Form)
-        self.horizontalLayoutWidget_3.setGeometry(QtCore.QRect(0, 10, 1331, 33))
+        self.horizontalLayoutWidget_3.setGeometry(QtCore.QRect(0, 10, 1331, 51))
         self.horizontalLayoutWidget_3.setObjectName("horizontalLayoutWidget_3")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget_3)
         self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
@@ -51,12 +51,9 @@ class Ui_Form(object):
         self.pushButton_11 = QtWidgets.QPushButton(self.horizontalLayoutWidget_3)
         self.pushButton_11.setObjectName("pushButton_11")
         self.horizontalLayout_3.addWidget(self.pushButton_11)
-        self.pushButton_13 = QtWidgets.QPushButton(self.horizontalLayoutWidget_3)
-        self.pushButton_13.setObjectName("pushButton_13")
-        self.horizontalLayout_3.addWidget(self.pushButton_13)
-        self.pushButton_12 = QtWidgets.QPushButton(self.horizontalLayoutWidget_3)
-        self.pushButton_12.setObjectName("pushButton_12")
-        self.horizontalLayout_3.addWidget(self.pushButton_12)
+        #self.graphicsView = QtWidgets.QGraphicsView(Form)
+        #self.graphicsView.setGeometry(QtCore.QRect(5, 71, 1340, 620))
+        #self.graphicsView.setObjectName("graphicsView")
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -75,6 +72,4 @@ class Ui_Form(object):
         self.pushButton_10.setText(_translate("Form", "向后"))
         self.pushButton_2.setText(_translate("Form", "open shp"))
         self.pushButton_11.setText(_translate("Form", "open db"))
-        self.pushButton_13.setText(_translate("Form", "d"))
-        self.pushButton_12.setText(_translate("Form", "k-mean"))
 

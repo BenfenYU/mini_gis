@@ -36,6 +36,9 @@ class GISVertex:
 
     def getY(self):
         return self.y
+    
+    def __repr__(self):
+        return 'x={} y={}'.format(self.x,self.y)
 
 
 class GISExtent:

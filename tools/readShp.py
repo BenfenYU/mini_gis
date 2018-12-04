@@ -1,7 +1,7 @@
 import os,shapefile,copy
-from .layer import * 
+from basicClass import *
 
-class GISShapefile:
+class ReadSHP:
     def readshp(self,shp):
         name = os.path.splitext(shp)[0]
         # 读出二进制
@@ -52,7 +52,6 @@ class GISShapefile:
         return GISLayer_layer#,Re,Ro
 
     def readLine(self,sf,layerType,name):
-        vertexInOneline = []
         allLines = []
         features = []
         # 每条字段的名称、类型等（竖）
@@ -64,6 +63,8 @@ class GISShapefile:
         n = 0
 
         for shape in sf.shapes():
+            # 必须每次都清空！
+            vertexInOneline = []
             for point in shape.points:
                 # 每条线上的vertex的列表
                 vertexInOneline.append(GISVertex(int(point[0]),int(point[1])))
@@ -86,7 +87,6 @@ class GISShapefile:
 
 
     def readPolygon(self,sf,layerType,name):
-        vertexPerPolygon = []
         allPolygon = []
         features = []
         # 每条字段的名称、类型等（竖）
@@ -98,6 +98,7 @@ class GISShapefile:
         n = 0
 
         for shape in sf.shapes():
+            vertexPerPolygon = []
             for point in shape.points:
                 vertexPerPolygon.append(GISVertex(int(point[0]),int(point[1])))
 
@@ -121,4 +122,3 @@ class GISShapefile:
         Re = 0.5 /((GISLayer_layer.FeatureCount()/extentArea)**0.5)
         Ro = sum(minValue)/(GISLayer_layer.FeatureCount())
         return Re,Ro
-

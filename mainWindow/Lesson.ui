@@ -19,7 +19,7 @@
      <x>0</x>
      <y>10</y>
      <width>1331</width>
-     <height>51</height>
+     <height>33</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -100,17 +100,21 @@
       </property>
      </widget>
     </item>
+    <item>
+     <widget class="QPushButton" name="pushButton_13">
+      <property name="text">
+       <string>d</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButton_12">
+      <property name="text">
+       <string>k-mean</string>
+      </property>
+     </widget>
+    </item>
    </layout>
-  </widget>
-  <widget class="QGraphicsView" name="graphicsView">
-   <property name="geometry">
-    <rect>
-     <x>5</x>
-     <y>71</y>
-     <width>1331</width>
-     <height>531</height>
-    </rect>
-   </property>
   </widget>
  </widget>
  <resources/>

@@ -16,21 +16,24 @@ class GISLayer: # layer类建一个字典，全类的静态属性，用来存储
         self.__deleteFlag = ()
 
     def draw(self,qwidget_obj,GISView_view,qp = None,\
-    color = Qt.red,thickness = 5,featureIndex = None):
+    featureIndex = None):
         # 不同参数不同处理
         if isinstance(featureIndex,list):
             return
         elif featureIndex:
             self.__GISFeature_Features[featureIndex].\
             draw(qwidget_obj,GISView_view,self.bool_DrawAttributeOrNot,\
-            qp,color ,thickness ,featureIndex)
+            qp,featureIndex)
             return 
         else:
             # 每个都画了
             for i in range(len(self.__GISFeature_Features)):
                 self.__GISFeature_Features[i].draw(qwidget_obj,GISView_view,\
-                self.bool_DrawAttributeOrNot,qp,color,thickness\
-                ,self.labelIndex)
+                self.bool_DrawAttributeOrNot,qp,self.labelIndex)
+            #print(len(self.__GISFeature_Features))
+            #self.__GISFeature_Features[1].draw(qwidget_obj,GISView_view,\
+            #    self.bool_DrawAttributeOrNot,qp,color,thickness\
+            #    ,self.labelIndex)
 
     def AddFeature(self,GISFeature_feature):
         self.__GISFeature_Features.append(GISFeature_feature)    
@@ -55,21 +58,48 @@ class GISLayer: # layer类建一个字典，全类的静态属性，用来存储
         
         return distanceList
 
+    # m指明具体哪个feature，n指明使用枚举中的哪种颜色
+    def setPen(self,m,n):
+        self.__GISFeature_Features[m].spatialPen = QPen(Qt.GlobalColor(n),6)
+        return 
+    
+    def __len__(self):
+        return len(self.__GISFeature_Features)
+
+    def __getitem__(self,index):
+        return self.__GISFeature_Features[index]
+
+    def __iter__(self):
+        for feature in self.__GISFeature_Features:
+            return feature
+
+    def __bool__(self):
+        return bool(self.__GISFeature_Features)
+
+    def __index__(self,feature):
+        return self.__GISFeature_Features.index(feature)
+
 class GISFeature:
     def __init__(self,GISSpatial_spatialpart,GISAttribute_attribute):
         self.GISSpatial_spatialpart = GISSpatial_spatialpart
         self.GISAttribute_attribute = GISAttribute_attribute
+        self.spatialPen = QPen(Qt.red,2)
+        self.attriPen = QPen(Qt.gray,2)
 
     def draw(self,qwidget_obj,GISView_view,bool_DrawAttributeOrNot,qp\
-    ,color,thickness,index):
+    ,index):
         qp.begin(qwidget_obj)
-        qp.setPen(QPen(color,thickness))
+        qp.setPen(self.spatialPen)
         self.GISSpatial_spatialpart.draw(qwidget_obj,GISView_view,qp,\
-        color,thickness,index)
+        index)
+        qp.end()
+
         if bool_DrawAttributeOrNot:
+            qp.begin(qwidget_obj)
+            qp.setPen(self.attriPen)
             self.GISAttribute_attribute.draw(qwidget_obj,qp,GISView_view,\
             self.GISSpatial_spatialpart.GISVertex_centroid,index)
-        qp.end()
+            qp.end()
 
     #def drawLine(self,qwidget_obj,qp,GISView_view,bool_DrawAttributeOrNot,index):
     #    self.GISSpatial_spatialpart.draw(qwidget_obj,qp,GISView_view)
@@ -82,8 +112,10 @@ class GISFeature:
     def distance(self,vertex):
         return self.GISSpatial_spatialpart.distance(vertex)
 
+    #def __repr__(self):
+    #    return 
+#
 class GISView:
-
 
     def __init__(self,GISExtent_extent,Qrect_rectangle):
         self.Update(GISExtent_extent,Qrect_rectangle)
@@ -102,52 +134,22 @@ class GISView:
         self.ScaleY = self.MapH/self.WinH
 
     # 这里的转换有点有点多余，只要新建图层则必然要画，所以这个可以封装起来。
-    def toScreenPoint(self,GISVertex_onevertex):
+    def toScreenPoint(self,GISVertex_onevertex,pointOrNot = True):
         #print(GISVertex_onevertex.x)
-        ScreenX = (GISVertex_onevertex.x-self.MapMinX)/self.ScaleX + 5
-        ScreenY = self.WinH-(GISVertex_onevertex.y-self.MapMinY)/self.ScaleY\
-        + 71
+        ScreenX = (GISVertex_onevertex.x-self.MapMinX)/self.ScaleX
+        ScreenY = self.WinH-(GISVertex_onevertex.y-self.MapMinY)/self.ScaleY
         point = QPoint(int(ScreenX),int(ScreenY))
+        if pointOrNot:
+            return point
 
-        return point
+        return ScreenX,ScreenY
 
-    def toScreenVertex(self,onevertex):
-        #print(GISVertex_onevertex.x)
-        ScreenX = (onevertex.x-self.MapMinX)/self.ScaleX
-        ScreenY = self.WinH-(onevertex.y-self.MapMinY)/self.ScaleY
-        onevertex = GISVertex(ScreenX,ScreenY)
+    #def toScreenVertex(self,onevertex):
+    #    #print(GISVertex_onevertex.x)
+    #    ScreenX = (onevertex.x-self.MapMinX)/self.ScaleX
+    #    ScreenY = self.WinH-(onevertex.y-self.MapMinY)/self.ScaleY
+    #    onevertex = GISVertex(ScreenX,ScreenY)
 
-        return onevertex
-
-    def toScreenLine(self,listVertex):
-        qLineFs = []
-        listPointF = []
-        for i in range(len(listVertex)):
-            vertex = listVertex[i]
-            qPoint = self.ToScreenPoint(vertex)
-            pointF = QPointF(qPoint)
-            listPointF.append(pointF)
-
-        for i in range(len(listVertex)-1):
-            qLineF = QLineF(listPointF[i],listPointF[i+1])
-            qLineFs.append(qLineF)
-
-        return qLineFs
-
-    def toScreenPolygon(self,listVertex):
-        listPoints = []
-        nPoints = 0
-        for i in range(len(listVertex)):
-            vertex = listVertex[i]
-            vertex = self.toScreenVertex(vertex)
-            listPoints.append(vertex.x)
-            listPoints.append(vertex.y)
-            nPoints+=1
-
-        polygon = QPolygon()
-        polygon.setPoints( listPoints)
-
-        return polygon
 
 
     def toMapVertex(self,vertex):

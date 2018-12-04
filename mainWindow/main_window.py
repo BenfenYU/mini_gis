@@ -2,13 +2,13 @@
 
 from .fromUi import *
 import random,os,copy,sys
-from basicClass import *
+from basicClass.layer import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5 import *
 from PyQt5.QtCore import Qt,QRect,QPoint,QPointF,QLineF,QRectF,pyqtSignal
+from tools import *
 
-layer = None
 
 # 继承两个类，qwidget类给构造函数，Ui_Form类给setupUi
 class MainWindow(QtWidgets.QWidget,Ui_Form):
@@ -22,7 +22,7 @@ class MainWindow(QtWidgets.QWidget,Ui_Form):
         self.nowLayer = [0]
         self.click = True
         self.viewList = []
-        self.__layer = None
+        self.layer = None
         self.nowPointer = len(self.viewList)-1
         self.drawLine = False
         self.features = []
@@ -43,75 +43,12 @@ class MainWindow(QtWidgets.QWidget,Ui_Form):
         self.pushButton_2.clicked.connect(self.openFileNameDialog)
         self.pushButton_9.setDisabled(True)
         self.pushButton_10.setDisabled(True)
-        
-    
-    def clickSelect(self,vertex):
-        minIndex = None
-        # 当前显示的图层中计算距离
-        for index in self.nowLayer:
-            # 计算距离并找到最小值
-            distancelist = self.layers[index].distance(vertex)
-            minValue = min(distancelist)
-            minIndex = distancelist.index(minValue)
-            print(vertex.x,vertex.y)
-            print(minValue,minIndex)
-            self.layers[index].draw(self,self.view,\
-            featureIndex = minIndex,color = Qt.green)  
-            
-            return index
-    
-
-    def openFileNameDialog(self):    
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(self,\
-        "QFileDialog.getOpenFileName()", 
-        "","ESRI shp (*.shp)", options=options)
-        if fileName:
-            self.openshp(fileName)
-
-    def openshp(self,filename):
-        sf = GISShapefile()
-        path = os.path.abspath(filename)
-        layer = sf.readshp(path)
-        layer.bool_drawAttributeOrNot = False
-        self.layers.append(layer)
-        print('读图完毕，开始画图')
-        self.showOverview(layer)
-        #QMessageBox.information(self,'提示','读取到'+str(layer.FeatureCount())+'个点'+'Re为：'+str(Re)+'。Ro为:'+str(Ro))
-
-
-
-    def openDbf(self):
-        if not self.layers:
-            QMessageBox.information(self,'提示','请首先加载图层')
-            return
-        dbfWindow = DbfWindow(layer = self.layers[0])
-        
-
-    def change_map(self):
-        action = None
-        sender = self.sender()
-
-        if sender == self.pushButton_4:action = GISMapActions.zoomin
-        elif sender == self.pushButton_7:action = GISMapActions.zoomout
-        elif sender == self.pushButton_5:action = GISMapActions.moveup
-        elif sender == self.pushButton_3:action = GISMapActions.movedown
-        elif sender == self.pushButton_8:action = GISMapActions.moveleft
-        elif sender == self.pushButton_6:action = GISMapActions.moveright
-        elif sender == self.pushButton_9:self.undo()
-        elif sender == self.pushButton_10:self.redo()
-
-        if action:
-            self.view.ChangeView(action)
-            self.UpdateMap()
+        self.pushButton_12.clicked.connect(self.kMean)
 
     def paintEvent(self, event):
             if self.drawLine:
                 qp = QPainter()
-                
-                self.__layer.draw(self,self.view,qp = qp)
-                
+                self.layer.draw(self,self.view,qp = qp)  
 
     # 双击显示其属性表
     def mouseDoubleClickEvent(self,e):
@@ -123,7 +60,7 @@ class MainWindow(QtWidgets.QWidget,Ui_Form):
             vertex = self.screenToMap(self.view,vertex)
             if self.click:
                 index = self.clickSelect(vertex)
-                dbf = DbfWindow(self.__layer,index = index)
+                dbf = DbfWindow(self.layer,index = index)
                 dbf.show()
                 #print(vertex.ge    color = Qt.red,thickness = 5)
         else:
@@ -148,29 +85,58 @@ class MainWindow(QtWidgets.QWidget,Ui_Form):
             print(x,y)
 
             return
-    
-    def screenToMap(self,view,vertex):
-        return view.toMapVertex(vertex)
-
-    def getLayer(self):
-        return self.__layer
 
     #def __transfer(self,X,Y):
     #    x = X-self.canvasFrameGeometryF.x()
     #    y = Y - self.canvasFrameGeometryF.y()
     #    
     #    return x,y
+        
+    def change_map(self):
+        action = None
+        sender = self.sender()
+
+        if sender == self.pushButton_4:action = GISMapActions.zoomin
+        elif sender == self.pushButton_7:action = GISMapActions.zoomout
+        elif sender == self.pushButton_5:action = GISMapActions.moveup
+        elif sender == self.pushButton_3:action = GISMapActions.movedown
+        elif sender == self.pushButton_8:action = GISMapActions.moveleft
+        elif sender == self.pushButton_6:action = GISMapActions.moveright
+        elif sender == self.pushButton_9:self.undo()
+        elif sender == self.pushButton_10:self.redo()
+
+        if action:
+            self.view.ChangeView(action)
+            self.UpdateMap()
+
+    def openFileNameDialog(self):    
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(self,\
+        "QFileDialog.getOpenFileName()", 
+        "","ESRI shp (*.shp)", options=options)
+        if fileName:
+            self.openshp(fileName)
+
+    def openshp(self,filename):
+        sf = ReadSHP()
+        path = os.path.abspath(filename)
+        layer = sf.readshp(path)
+        layer.bool_drawAttributeOrNot = False
+        self.layers.append(layer)
+        self.showOverview(layer)
+        # QMessageBox.information(self,'提示','读取到'+str
+        # (layer.FeatureCount())+'个点'+'Re为：'+str(Re)+'。Ro为:'+str(Ro))
 
     def showOverview(self,layer):
         # 显示整个图像，然后更新地图view，view再更新extent
         try:
-            self.__layer = layer
-            self.view.UpdateExtent(self.__layer.GISExtent_Extent)
+            self.layer = layer
+            self.view.UpdateExtent(self.layer.GISExtent_Extent)
             self.UpdateMap()
         except AttributeError as e:
             print('错误:',e)
     
-
     # 统一的更新地图函数
     def UpdateMap(self):        
         self.pop_needlessand_add()
@@ -216,6 +182,38 @@ class MainWindow(QtWidgets.QWidget,Ui_Form):
         self.nowPointer +=1
         self.updatethemap = True
         self.paint()
+
+    def kMean(self):
+        try:
+            kMeanObj = Kmeans(self.layer,5,1000)
+            kMeanObj.startK()
+            QMessageBox.information(self,'result','k-mean计算完成')
+        except BaseException as e:
+            print(e)
+        
+        self.paint()
+
+
+    def clickSelect(self,vertex):
+        minIndex = None
+        # 当前显示的图层中计算距离
+        for index in self.nowLayer:
+            # 计算距离并找到最小值
+            distancelist = self.layers[index].distance(vertex)
+            minValue = min(distancelist)
+            minIndex = distancelist.index(minValue)
+            print(vertex.x,vertex.y)
+            print(minValue,minIndex)
+            self.layers[index].draw(self,self.view,\
+            featureIndex = minIndex,color = Qt.green)  
+            
+            return index
+
+    def openDbf(self):
+        if not self.layers:
+            QMessageBox.information(self,'提示','请首先加载图层')
+            return
+        dbfWindow = DbfWindow(layer = self.layers[0])
 
 class DbfWindow(QDialog):
     # index用来辨识输入的是整个图层还是图层的某个要素

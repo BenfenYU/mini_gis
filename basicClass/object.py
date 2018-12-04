@@ -1,7 +1,7 @@
 from .basic import *
 from PyQt5.QtCore import Qt,QRect,QPoint,QPointF,QLineF
 from abc import ABCMeta, abstractmethod
-from PyQt5.QtGui import QPainter, QPen,QPolygon,	QPolygonF
+from PyQt5.QtGui import QPainter, QPen,QPolygon,QPolygonF,QColor
 from PyQt5.QtWidgets import  QGraphicsScene,QGraphicsLineItem,QGraphicsPolygonItem
 from abc import ABCMeta, abstractmethod
 
@@ -38,15 +38,15 @@ class GISAttribute:
 class GISPoint(GISSpatial):
     def __init__(self,GISVertex_onevertex):
         self.GISVertex_centroid = GISVertex_onevertex
-        self.GISExtent_extent = GISExtent(GISVertex_onevertex,GISVertex_onevertex)
+        self.GISExtent_extent = GISExtent(GISVertex_onevertex\
+        ,GISVertex_onevertex)
 
-    def draw(self,qwidget_obj,GISView_view,qp,color,thickness,index):
-        Point_screenpoint = GISView_view.toScreenPoint(self.GISVertex_centroid)
-        pen = QPen(color, thickness)
+    def draw(self,qwidget_obj,GISView_view,qp,index):
+        Point_screenpoint = GISView_view.toScreenPoint\
+        (self.GISVertex_centroid)
         r = QPoint(Point_screenpoint.x(), Point_screenpoint.y())
         #print(Point_screenpoint.x(), Point_screenpoint.y())
         # 用添加椭圆的方法画点
-        qp.setPen(pen)
         qp.drawPoint(Point_screenpoint)
 
     def distance(self,vertex):
@@ -56,9 +56,11 @@ class GISLine(GISSpatial):
     def __init__(self,List_allvertex):
         self.List_allvertex = List_allvertex
 
-    def draw(self,qwidget_obj,GISView_view,qp,color ,thickness ,index):
+    def draw(self,qwidget_obj,GISView_view,qp,index):
         qPoints = [GISView_view.toScreenPoint(vertex) 
         for vertex in self.List_allvertex]
+        #print(self)
+        #qPointsF = [qPoints) for qPoints in qPoints]
         qp.drawPolyline(QPolygon(qPoints))
         #for qLineF in qLineFsToScreenList:
         #    pen = QPen(color, thickness)
@@ -83,16 +85,27 @@ class GISLine(GISSpatial):
 
         return distance
 
+    def __repr__(self):
+        return 'Line object:From {} To {}'.format(str(self.List_allvertex[0]),\
+        str(self.List_allvertex[-1]))
+
 class GISPolygon(GISSpatial):
     def __init__(self,List_allvertex):
         self.List_allvertex = List_allvertex
 
-    def draw(self,qwidget_obj,GISView_view,qp,color,thickness,\
+    def draw(self,qwidget_obj,GISView_view,qp,\
     index):
-        qPolygonFsToScreen = GISView_view.toScreenPolygon(self.List_allvertex)
-        pen = QPen(color, thickness)
-        qp.setPen(pen)
-        qp.drawPolygon(qPolygonFsToScreen)
+        #qPolygonFsToScreen = GISView_view.toScreenPolygon(self.List_allvertex)
+        points = [GISView_view.toScreenPoint(vertex,False) 
+        for vertex in self.List_allvertex]
+        # 必须转化为setPoints函数要求的参数格式
+        pointxy = []
+        for point in points:
+            pointxy.append(point[0])
+            pointxy.append(point[1])
+        qPolygon = QPolygon()
+        qPolygon.setPoints(pointxy)
+        qp.drawPolygon(qPolygon)
             #pen = QPen(Qt.blue, 1, Qt.SolidLine)
             #qwidget_obj.scene.addLine(qLineF , pen)
 
