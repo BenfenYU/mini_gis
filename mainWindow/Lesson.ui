@@ -18,7 +18,7 @@
     <rect>
      <x>0</x>
      <y>10</y>
-     <width>1331</width>
+     <width>619</width>
      <height>33</height>
     </rect>
    </property>
@@ -27,48 +27,6 @@
      <widget class="QPushButton" name="pushButton">
       <property name="text">
        <string>zoom to layer</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="pushButton_4">
-      <property name="text">
-       <string>magnify</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="pushButton_7">
-      <property name="text">
-       <string>shrink</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="pushButton_5">
-      <property name="text">
-       <string>up</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="pushButton_3">
-      <property name="text">
-       <string>down</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="pushButton_8">
-      <property name="text">
-       <string>left</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="pushButton_6">
-      <property name="text">
-       <string>right</string>
       </property>
      </widget>
     </item>
@@ -103,7 +61,7 @@
     <item>
      <widget class="QPushButton" name="pushButton_13">
       <property name="text">
-       <string>d</string>
+       <string>dbScan</string>
       </property>
      </widget>
     </item>

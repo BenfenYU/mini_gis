@@ -43,13 +43,11 @@ class ReadSHP:
         layerExtent = sf.bbox
         # 这里的列表四个元素存储了两点的xy坐标，写成0113，结果范围出错。。。
         GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
-        GISLayer_layer = GISLayer(name,layerType,GISExtent_extent,fieldKind0)
-        GISLayer_layer.addAttriColumn(fieldKind)
+        layer = Layer(layerType,features = features,\
+        extent = GISExtent_extent)
+        layer.addAttriColumn(fieldKind)
 
-        for feature in features:
-            GISLayer_layer.AddFeature(feature)
-
-        return GISLayer_layer#,Re,Ro
+        return layer#,Re,Ro
 
     def readLine(self,sf,layerType,name):
         allLines = []
@@ -77,13 +75,11 @@ class ReadSHP:
 
         layerExtent=sf.bbox
         GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
-        GISLayer_layer = GISLayer(name,layerType,GISExtent_extent,fieldKind0)
-        GISLayer_layer.addAttriColumn(fieldKind)
+        layer = Layer(layerType,features = features,\
+        extent = GISExtent_extent)
+        layer.addAttriColumn(fieldKind)
 
-        for feature in features:
-            GISLayer_layer.AddFeature(feature)
-
-        return GISLayer_layer
+        return layer
 
 
     def readPolygon(self,sf,layerType,name):
@@ -105,20 +101,20 @@ class ReadSHP:
             allPolygon.append(GISPolygon(vertexPerPolygon))
 
         for polygon in allPolygon:
-            features.append(GISFeature(polygon,GISAttribute(recs[allPolygon.index(polygon)])))
+            features.append(GISFeature(polygon,GISAttribute(\
+            recs[allPolygon.index(polygon)])))
 
         layerExtent = sf.bbox
-        GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
-        GISLayer_layer = GISLayer(name,layerType,GISExtent_extent,fieldKind0)
-        GISLayer_layer.addAttriColumn(fieldKind)
+        GISExtent_extent = GISExtent(GISVertex(layerExtent[0],\
+        layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
+        layer = Layer(layerType,features = features,\
+        extent = GISExtent_extent)#,deleteFlag = fieldKind0
+        layer.addAttriColumn(fieldKind)
 
-        for feature in features:
-            GISLayer_layer.AddFeature(feature)
+        return layer
 
-        return GISLayer_layer
-
-    def pointPattern(self,GISLayer_layer,minValue,xMin,yMin,xMax,yMax):
+    def pointPattern(self,layer,minValue,xMin,yMin,xMax,yMax):
         extentArea = (xMax-xMin)*(yMax-yMin)
-        Re = 0.5 /((GISLayer_layer.FeatureCount()/extentArea)**0.5)
-        Ro = sum(minValue)/(GISLayer_layer.FeatureCount())
+        Re = 0.5 /((layer.FeatureCount()/extentArea)**0.5)
+        Ro = sum(minValue)/(layer.FeatureCount())
         return Re,Ro

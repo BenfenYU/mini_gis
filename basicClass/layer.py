@@ -3,17 +3,17 @@
 
 from .object import *
 
-class GISLayer: # layer类建一个字典，全类的静态属性，用来存储不同的图层。所
-    def __init__(self,name,SHAPETYPE_ShapeType,GISExtent_Extent,\
-    deleteFlag = ()):
+class Layer: # layer类建一个字典，全类的静态属性，用来存储不同的图层。所
+    def __init__(self,shapeType,features = None,extent = None,\
+    deleteFlag = None,name = None):
         self.name = name
-        self.shapeType = SHAPETYPE_ShapeType
-        self.GISExtent_Extent = GISExtent_Extent
+        self.shapeType = shapeType
+        self.GISExtent_Extent = extent
         self.bool_DrawAttributeOrNot = False
         self.labelIndex = 0
-        self.__GISFeature_Features = []
+        self.GISFeature_Features = features
         self._attriColumn = []
-        self.__deleteFlag = ()
+        self.__deleteFlag = deleteFlag
 
     def draw(self,qwidget_obj,GISView_view,qp = None,\
     featureIndex = None):
@@ -21,28 +21,34 @@ class GISLayer: # layer类建一个字典，全类的静态属性，用来存储
         if isinstance(featureIndex,list):
             return
         elif featureIndex:
-            self.__GISFeature_Features[featureIndex].\
+            self.GISFeature_Features[featureIndex].\
             draw(qwidget_obj,GISView_view,self.bool_DrawAttributeOrNot,\
             qp,featureIndex)
             return 
         else:
             # 每个都画了
-            for i in range(len(self.__GISFeature_Features)):
-                self.__GISFeature_Features[i].draw(qwidget_obj,GISView_view,\
+            for i in range(len(self.GISFeature_Features)):
+                self.GISFeature_Features[i].draw(qwidget_obj,GISView_view,\
                 self.bool_DrawAttributeOrNot,qp,self.labelIndex)
-            #print(len(self.__GISFeature_Features))
-            #self.__GISFeature_Features[1].draw(qwidget_obj,GISView_view,\
+            #print(len(self.GISFeature_Features))
+            #self.GISFeature_Features[1].draw(qwidget_obj,GISView_view,\
             #    self.bool_DrawAttributeOrNot,qp,color,thickness\
             #    ,self.labelIndex)
+        
+    def kMean(self,classNum = 3,iterNum = 50):
+        kMeanObj = KMeans(self,classNum,iterNum)
+        classIndex,classResult,returnValue = kMeanObj.startK()
+
+        return returnValue
 
     def AddFeature(self,GISFeature_feature):
-        self.__GISFeature_Features.append(GISFeature_feature)    
+        self.GISFeature_Features.append(GISFeature_feature)    
 
     def getFeature(self):
-        return self.__GISFeature_Features
+        return self.GISFeature_Features
 
     def FeatureCount(self):
-        return len(self.__GISFeature_Features)
+        return len(self.GISFeature_Features)
 
     def addAttriColumn(self,listAttri):
         for attri in listAttri:
@@ -53,38 +59,38 @@ class GISLayer: # layer类建一个字典，全类的静态属性，用来存储
 
     def distance(self,vertex):
         distanceList = []
-        for feature in self.__GISFeature_Features:
+        for feature in self.GISFeature_Features:
             distanceList.append(feature.distance(vertex))
         
         return distanceList
 
     # m指明具体哪个feature，n指明使用枚举中的哪种颜色
     def setPen(self,m,n):
-        self.__GISFeature_Features[m].spatialPen = QPen(Qt.GlobalColor(n),6)
+        self.GISFeature_Features[m].spatialPen = QPen(Qt.GlobalColor(n),8)
         return 
     
     def __len__(self):
-        return len(self.__GISFeature_Features)
+        return len(self.GISFeature_Features)
 
     def __getitem__(self,index):
-        return self.__GISFeature_Features[index]
+        return self.GISFeature_Features[index]
 
     def __iter__(self):
-        for feature in self.__GISFeature_Features:
+        for feature in self.GISFeature_Features:
             return feature
 
     def __bool__(self):
-        return bool(self.__GISFeature_Features)
+        return bool(self.GISFeature_Features)
 
     def __index__(self,feature):
-        return self.__GISFeature_Features.index(feature)
+        return self.GISFeature_Features.index(feature)
 
 class GISFeature:
     def __init__(self,GISSpatial_spatialpart,GISAttribute_attribute):
         self.GISSpatial_spatialpart = GISSpatial_spatialpart
         self.GISAttribute_attribute = GISAttribute_attribute
-        self.spatialPen = QPen(Qt.red,2)
-        self.attriPen = QPen(Qt.gray,2)
+        self.spatialPen = QPen(Qt.black,6)
+        self.attriPen = QPen(Qt.black,6)
 
     def draw(self,qwidget_obj,GISView_view,bool_DrawAttributeOrNot,qp\
     ,index):
@@ -144,11 +150,13 @@ class GISView:
 
         return ScreenX,ScreenY
 
-    #def toScreenVertex(self,onevertex):
-    #    #print(GISVertex_onevertex.x)
-    #    ScreenX = (onevertex.x-self.MapMinX)/self.ScaleX
-    #    ScreenY = self.WinH-(onevertex.y-self.MapMinY)/self.ScaleY
-    #    onevertex = GISVertex(ScreenX,ScreenY)
+    def toScreenVertex(self,onevertex):
+        #print(GISVertex_onevertex.x)
+        ScreenX = (onevertex.x-self.MapMinX)/self.ScaleX
+        ScreenY = self.WinH-(onevertex.y-self.MapMinY)/self.ScaleY
+        vertex = GISVertex(ScreenX,ScreenY)
+
+        return vertex
 
 
 

@@ -2,6 +2,7 @@
 
 from .fromUi import *
 import random,os,copy,sys
+sys.setrecursionlimit(10000)
 from basicClass.layer import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -29,14 +30,16 @@ class MainWindow(QtWidgets.QWidget,Ui_Form):
         frameGeometry = self.geometry()
         self.view = GISView(GISExtent(GISVertex(0,0),GISVertex(100,100)),\
         frameGeometry)
+        #self.backGround = None
+        #self.setBack = False
 
         self.pushButton.clicked.connect(self.showOverview)
-        self.pushButton_3.clicked.connect(self.change_map)
-        self.pushButton_4.clicked.connect(self.change_map)
-        self.pushButton_5.clicked.connect(self.change_map)
-        self.pushButton_6.clicked.connect(self.change_map)
-        self.pushButton_7.clicked.connect(self.change_map)
-        self.pushButton_8.clicked.connect(self.change_map)
+        #self.pushButton_3.clicked.connect(self.change_map)
+        #self.pushButton_4.clicked.connect(self.change_map)
+        #self.pushButton_5.clicked.connect(self.change_map)
+        #self.pushButton_6.clicked.connect(self.change_map)
+        #self.pushButton_7.clicked.connect(self.change_map)
+        #self.pushButton_8.clicked.connect(self.change_map)
         self.pushButton_9.clicked.connect(self.change_map)
         self.pushButton_10.clicked.connect(self.change_map)
         self.pushButton_11.clicked.connect(self.openDbf)
@@ -44,11 +47,55 @@ class MainWindow(QtWidgets.QWidget,Ui_Form):
         self.pushButton_9.setDisabled(True)
         self.pushButton_10.setDisabled(True)
         self.pushButton_12.clicked.connect(self.kMean)
+        self.pushButton_13.clicked.connect(self.dbScan)
+
+    def kMean(self):
+        try:
+            kMeanObj = KMeans(self.layer, 5, 200,self.view)
+            classIndex,classResult,returnValue = kMeanObj.startK()
+            QMessageBox.information(self,'result','Kmean计算完成。')
+        except BaseException as e:
+            QMessageBox.information(self,'wrong',str(e))
+        
+        self.paint()
+
+    def dbScan(self):
+        try:
+            dbObj = DBScan(self.layer,view = self.view,r =200 ,minPts = 4)
+            returnValue = dbObj.findKernal()
+            if returnValue == 0:
+                QMessageBox.information(self,'result','DBScan聚类：没有找到核心点！')
+            else:
+                QMessageBox.information(self,'result','DBScan计算完成')
+        except BaseException as e:
+            print(e)
+        
+        self.paint()
 
     def paintEvent(self, event):
-            if self.drawLine:
-                qp = QPainter()
-                self.layer.draw(self,self.view,qp = qp)  
+        # 画缓冲区的圆弧
+        #rectt = QRect(50,90,1000,1200)
+        #start = 90*16
+        #span = 120*16
+        if self.drawLine:
+            qp = QPainter()
+            #qp.begin(self)
+            #qp.setBackground(QBrush(Qt.gray))
+            #qp.drawArc(rectt,start,span)
+            #qp.end()
+            self.layer.draw(self,self.view,qp = qp)  
+        
+        self.drawLine = False
+
+    def wheelEvent(self,event):
+        delta = event.angleDelta()
+        if delta.y()>0:
+            self.view.ChangeView(GISMapActions.zoomin)
+        else:
+            self.view.ChangeView(GISMapActions.zoomout)
+        
+        self.UpdateMap()
+
 
     # 双击显示其属性表
     def mouseDoubleClickEvent(self,e):
@@ -121,17 +168,16 @@ class MainWindow(QtWidgets.QWidget,Ui_Form):
     def openshp(self,filename):
         sf = ReadSHP()
         path = os.path.abspath(filename)
-        layer = sf.readshp(path)
-        layer.bool_drawAttributeOrNot = False
+        self.layer = sf.readshp(path)
+        self.layer.bool_drawAttributeOrNot = False
         self.layers.append(layer)
-        self.showOverview(layer)
+        self.showOverview()
         # QMessageBox.information(self,'提示','读取到'+str
         # (layer.FeatureCount())+'个点'+'Re为：'+str(Re)+'。Ro为:'+str(Ro))
 
-    def showOverview(self,layer):
+    def showOverview(self):
         # 显示整个图像，然后更新地图view，view再更新extent
         try:
-            self.layer = layer
             self.view.UpdateExtent(self.layer.GISExtent_Extent)
             self.UpdateMap()
         except AttributeError as e:
@@ -158,8 +204,7 @@ class MainWindow(QtWidgets.QWidget,Ui_Form):
 
         #self.clear()
         self.drawLine = True
-        self.update()
-            
+        self.update()   
     
     # 指针永远指向当前地图显示的范围，不论是否为最新的
     def pop_needlessand_add(self):
@@ -182,17 +227,6 @@ class MainWindow(QtWidgets.QWidget,Ui_Form):
         self.nowPointer +=1
         self.updatethemap = True
         self.paint()
-
-    def kMean(self):
-        try:
-            kMeanObj = Kmeans(self.layer,5,1000)
-            kMeanObj.startK()
-            QMessageBox.information(self,'result','k-mean计算完成')
-        except BaseException as e:
-            print(e)
-        
-        self.paint()
-
 
     def clickSelect(self,vertex):
         minIndex = None

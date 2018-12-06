@@ -18,7 +18,6 @@ class GISSpatial(metaclass = ABCMeta):
     def distance(self):
         return
 
-
 class GISAttribute:
     def __init__(self,listValues = []):
         self.List_values = listValues

@@ -1,3 +1,3 @@
 from .buffer import *
-from .kMean import *
+from .cluster import *
 from .readShp import *
