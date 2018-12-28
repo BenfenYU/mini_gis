@@ -1,1 +1,1 @@
-from basicClass import *
+from newBasicClass import *

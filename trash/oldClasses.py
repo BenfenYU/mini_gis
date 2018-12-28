@@ -26,17 +26,17 @@ class GISMapActions(Enum):
 #-----------------------------------------------------------
 
 class Layer # layer类建一个字典，全类的静态属性，用来存储不同的图层。所
-    def __init__(self,name,SHAPETYPE_ShapeType,GISExtent_Extent,deleteFlag = ()):
+    def __init__(self,name,SHAPETYPE_ShapeType,Extent,deleteFlag = ()):
         self.name = name
         self.shapeType = SHAPETYPE_ShapeType
-        self.GISExtent_Extent = GISExtent_Extent
+        self.Extent = Extent
         self.bool_DrawAttributeOrNot = False
         self.labelIndex = 0
         self.__GISFeature_Features = []
         self._attriColumn = []
         self.__deleteFlag = ()
 
-    def draw(self,qwidget_obj,qp,GISView_view):
+    def draw(self,qWidget,qp,GISView_view):
         # 每个都画了
         for i in range(len(self.__GISFeature_Features)):
             self.__GISFeature_Features[i].draw(qwidget_obj,qp,GISView_view,self.bool_DrawAttributeOrNot,self.labelIndex)
@@ -97,9 +97,9 @@ class GISAttribute:
 # ----------------------------------------------------------
 
 class GISSpatial(metaclass = ABCMeta):
-    def __init__(self,GISVertex_centroid,GISExtent_extent):
+    def __init__(self,GISVertex_centroid,extent):
         self.GISVertex_centroid = GISVertex_centroid
-        self.GISExtent_extent = GISExtent_extent
+        self.extent = extent
 
     @abstractmethod
     def draw(self,qp,GISView_view):
@@ -119,31 +119,37 @@ class GISExtent:
     action_record = [[0,0,100,100]]
     now_pointer = 0
 
-    def __init__(self,GISVertex_bottomleft,GISVertex_upright):
-        self.GISVertex_bottomleft = GISVertex_bottomleft
-        self.GISVertex_upright = GISVertex_upright
-        self.newminx = self.GISVertex_bottomleft.x
-        self.newminy = self.GISVertex_bottomleft.y
-        self.newmaxx = self.GISVertex_upright.x
-        self.newmaxy = self.GISVertex_upright.y
+    def __init__(self,bottomLeft,upRight):
+        self.bottomLeft = bottomLeft
+        self.upRight = upRight
+        self.minX = self.bottomLeft.x
+        self.minY = self.bottomLeft.y
+        self.maxX = self.upRight.x
+        self.maxY = self.upRight.y
 
-    def getMinX(self):
-        return self.GISVertex_bottomleft.x
+    @property
+    def minX(self):
+        return self.minX
 
-    def getMaxX(self):
-        return self.GISVertex_upright.x
+    @property
+    def maxX(self):
+        return self.maxX
 
-    def getMinY(self):
-        return self.GISVertex_bottomleft.y
+    @property
+    def maxY(self):
+        return self.maxY
 
-    def getMaxY(self):
-        return self.GISVertex_upright.y
+    @property
+    def minY(self):
+        return self.minY
 
-    def getWidth(self):
-        return self.GISVertex_upright.x-self.GISVertex_bottomleft.x
+    @property
+    def width(self):
+        return self.maxX-self.minX
 
-    def getHeight(self):
-        return self.GISVertex_upright.y-self.GISVertex_bottomleft.y
+    @property
+    def height(self):
+        return self.maxY-self.minY
 
     def ChangeExtent(self,GISMapActions_action):
         if GISMapActions_action == GISMapActions.zoomin:
@@ -173,10 +179,10 @@ class GISExtent:
         #}
         #
         #switch[GISMapActions_action]
-        self.GISVertex_upright.x = self.newmaxx
-        self.GISVertex_upright.y = self.newmaxy
-        self.GISVertex_bottomleft.x = self.newminx
-        self.GISVertex_bottomleft.y = self.newminy
+        self.upRight.x = self.newmaxx
+        self.upRight.y = self.newmaxy
+        self.bottomLeft.x = self.newminx
+        self.bottomLeft.y = self.newminy
 
 
     def zoomin(self):
@@ -216,9 +222,9 @@ class GISExtent:
         GISExtent.now_pointer+=1
 
 
-    def copyFrom(self,GISExtent_extent):
-        self.GISVertex_upright.copyFrom(GISExtent_extent.GISVertex_upright)
-        self.GISVertex_bottomleft.copyFrom(GISExtent_extent.GISVertex_bottomleft)
+    def copyFrom(self,extent):
+        self.upRight.copyFrom(extent.upRight)
+        self.bottomLeft.copyFrom(extent.bottomLeft)
 
 # ----------------------------------------------------------
 
@@ -241,7 +247,7 @@ class GISVertex:
 class GISPoint(GISSpatial):
     def __init__(self,GISVertex_onevertex):
         self.GISVertex_centroid = GISVertex_onevertex
-        self.GISExtent_extent = GISExtent(GISVertex_onevertex,GISVertex_onevertex)
+        self.extent = GISExtent(GISVertex_onevertex,GISVertex_onevertex)
 
     def draw(self,qwidget_obj,qp,GISView_view):
         Point_screenpoint = GISView_view.ToScreenPoint(self.GISVertex_centroid)
@@ -303,19 +309,19 @@ class GISPolygon(GISSpatial):
 class GISView:
 
 
-    def __init__(self,GISExtent_extent,Qrect_rectangle):
-        self.Update(GISExtent_extent,Qrect_rectangle)
+    def __init__(self,extent,Qrect_rectangle):
+        self.Update(extent,Qrect_rectangle)
 
-    def Update(self,GISExtent_extent,Qrectrectangle):
-        self.GISExtent_currentmapextent = GISExtent_extent
+    def Update(self,extent,Qrectrectangle):
+        self.currentmapextent = extent
         self.MapWindowSize = Qrectrectangle
-        self.MapMinX = self.GISExtent_currentmapextent.getMinX()
-        self.MapMinY = self.GISExtent_currentmapextent.getMinY()
+        self.MapMinX = self.currentmapextent.getMinX()
+        self.MapMinY = self.currentmapextent.getMinY()
         # widh和height属性待补充
         self.WinW = Qrectrectangle.width()
         self.WinH = Qrectrectangle.height()
-        self.MapW = self.GISExtent_currentmapextent.getWidth()
-        self.MapH = self.GISExtent_currentmapextent.getHeight()
+        self.MapW = self.currentmapextent.getWidth()
+        self.MapH = self.currentmapextent.getHeight()
         self.ScaleX = self.MapW/self.WinW
         self.ScaleY = self.MapH/self.WinH
 
@@ -373,21 +379,21 @@ class GISView:
 
     def ChangeView(self,GISMapActions_action):
         # 改变范围
-        self.GISExtent_currentmapextent.ChangeExtent(GISMapActions_action)
+        self.currentmapextent.ChangeExtent(GISMapActions_action)
         # 更新view的各比例
-        self.Update(self.GISExtent_currentmapextent,self.MapWindowSize)
+        self.Update(self.currentmapextent,self.MapWindowSize)
 
-    def UpdateExtent(self,GISExtent_extent):
-        self.GISExtent_currentmapextent.copyFrom(GISExtent_extent)
-        self.Update(self.GISExtent_currentmapextent,self.MapWindowSize)
+    def UpdateExtent(self,extent):
+        self.currentmapextent.copyFrom(extent)
+        self.Update(self.currentmapextent,self.MapWindowSize)
 
     # 这是个错误示范，self.GISExtent是引用变量，指向地址，不直接存储值大小，多个变量指向同一地址，修改一次，所有变量指向的值都会发生变化
     # def reView(self):
     #    GISView.now_pointer -=1
-    #    self.GISExtent_currentmapextent = GISView.action_record[GISView.now_pointer]
-    #    print(self.GISExtent_currentmapextent.GISVertex_upright.x)
+    #    self.currentmapextent = GISView.action_record[GISView.now_pointer]
+    #    print(self.currentmapextent.GISVertex_upRight.x)
     #    print(GISView.now_pointer)
-    #    self.Update(self.GISExtent_currentmapextent,self.MapWindowSize)
+    #    self.Update(self.currentmapextent,self.MapWindowSize)
 
 # ---------------------------------------------------------------
 
@@ -432,8 +438,8 @@ class GISShapefile:
         print(len(features))       
         layerExtent = sf.bbox
         # 这里的列表四个元素存储了两点的xy坐标，写成0113，结果范围出错。。。
-        GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
-        layer = Layer(name,layerType,GISExtent_extent,fieldKind0)
+        extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
+        layer = Layer(name,layerType,extent,fieldKind0)
         layer.addAttriColumn(fieldKind)
 
         for feature in features:
@@ -457,8 +463,8 @@ class GISShapefile:
             features.append(GISFeature(line,GISAttribute()))
 
         layerExtent = sf.bbox
-        GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
-        layer = Layer(name,layerType,GISExtent_extent)
+        extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
+        layer = Layer(name,layerType,extent)
 
         for feature in features:
             layer.AddFeature(feature)
@@ -481,8 +487,8 @@ class GISShapefile:
             features.append(GISFeature(polygon,GISAttribute()))
 
         layerExtent = sf.bbox
-        GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
-        layer = Layer(name,layerType,GISExtent_extent)
+        extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
+        layer = Layer(name,layerType,extent)
 
         for feature in features:
             layer.AddFeature(feature)

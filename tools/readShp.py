@@ -1,5 +1,5 @@
 import os,shapefile,copy
-from basicClass import *
+from .classes import *
 
 class ReadSHP:
     def readshp(self,shp):
@@ -19,7 +19,7 @@ class ReadSHP:
         elif layerType == 5:
             layer = self.readPolygon(sf,layerType,name)
         else:
-            QMessageBox.information(self,'提示','暂时不支持，请升级后再来。')
+            return
 
         return layer
 
@@ -35,23 +35,22 @@ class ReadSHP:
         # 这里细化到组成每个空间对象的点
         for shape in sf.shapes():
             for point in shape.points:
-                onePoint = GISPoint(GISVertex(point[0],point[1]))
-                onefeature = GISFeature(onePoint,GISAttribute(recs[n]))
-                features.append(onefeature)
+                onePoint = SoloPoint(point[0],point[1])
+                features.append(onePoint)
                 n +=1
          
         layerExtent = sf.bbox
         # 这里的列表四个元素存储了两点的xy坐标，写成0113，结果范围出错。。。
-        GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
+        extent = Extent(SoloPoint(layerExtent[0],layerExtent[1]),\
+        SoloPoint(layerExtent[2],layerExtent[3]))
         layer = Layer(layerType,features = features,\
-        extent = GISExtent_extent)
-        layer.addAttriColumn(fieldKind)
+        extent = extent)
+        #layer.addAttriColumn(fieldKind)
 
-        return layer#,Re,Ro
+        return layer
 
     def readLine(self,sf,layerType,name):
         allLines = []
-        features = []
         # 每条字段的名称、类型等（竖）
         fieldKind = copy.deepcopy(sf.fields)
         fieldKind0 = fieldKind[0]
@@ -62,54 +61,49 @@ class ReadSHP:
 
         for shape in sf.shapes():
             # 必须每次都清空！
-            vertexInOneline = []
+            pointInOneline = []
             for point in shape.points:
                 # 每条线上的vertex的列表
-                vertexInOneline.append(GISVertex(int(point[0]),int(point[1])))
+                pointInOneline.append(SoloPoint(point[0],point[1]))
             # 存储所有线的列表
-            allLines.append(GISLine(vertexInOneline))
-
-        for line in allLines:
-            index = allLines.index(line)
-            features.append(GISFeature(line,GISAttribute(recs[index])))
+            allLines.append(SoloLine(pointInOneline))
 
         layerExtent=sf.bbox
-        GISExtent_extent = GISExtent(GISVertex(layerExtent[0],layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
-        layer = Layer(layerType,features = features,\
-        extent = GISExtent_extent)
-        layer.addAttriColumn(fieldKind)
+        extent = Extent(SoloPoint(layerExtent[0],layerExtent[1]),\
+        SoloPoint(layerExtent[2],layerExtent[3]))
+        layer = Layer(layerType,features = allLines,\
+        extent = extent)
+        #layer.addAttriColumn(fieldKind)
 
         return layer
 
-
     def readPolygon(self,sf,layerType,name):
         allPolygon = []
-        features = []
         # 每条字段的名称、类型等（竖）
         fieldKind = copy.deepcopy(sf.fields)
         fieldKind0 = fieldKind[0]
         del fieldKind[0]
         # 每个空间对象是一个列表，由一个大列表存放在recs中
         recs = sf.records()
-        n = 0
 
         for shape in sf.shapes():
-            vertexPerPolygon = []
+            pointPerPolygon = []
             for point in shape.points:
-                vertexPerPolygon.append(GISVertex(int(point[0]),int(point[1])))
+                for p in pointPerPolygon:
+                    if SoloPoint(point[0],point[1]) == p:
+                        pointPerPolygon.append(SoloPoint(point[0],point[1]))
+                        allPolygon.append(SoloPolygon(pointPerPolygon))
+                        pointPerPolygon = []
 
-            allPolygon.append(GISPolygon(vertexPerPolygon))
-
-        for polygon in allPolygon:
-            features.append(GISFeature(polygon,GISAttribute(\
-            recs[allPolygon.index(polygon)])))
+                pointPerPolygon.append(SoloPoint(point[0],point[1]))
+            allPolygon.append(SoloPolygon(pointPerPolygon))
 
         layerExtent = sf.bbox
-        GISExtent_extent = GISExtent(GISVertex(layerExtent[0],\
-        layerExtent[1]),GISVertex(layerExtent[2],layerExtent[3]))
-        layer = Layer(layerType,features = features,\
-        extent = GISExtent_extent)#,deleteFlag = fieldKind0
-        layer.addAttriColumn(fieldKind)
+        extent = Extent(Point(layerExtent[0],\
+        layerExtent[1]),Point(layerExtent[2],layerExtent[3]))
+        layer = Layer(layerType,features = allPolygon,\
+        extent = extent)#,deleteFlag = fieldKind0
+        #layer.addAttriColumn(fieldKind)
 
         return layer
 
@@ -118,3 +112,7 @@ class ReadSHP:
         Re = 0.5 /((layer.FeatureCount()/extentArea)**0.5)
         Ro = sum(minValue)/(layer.FeatureCount())
         return Re,Ro
+
+
+
+
